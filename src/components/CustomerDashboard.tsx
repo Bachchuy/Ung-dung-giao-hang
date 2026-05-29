@@ -24,7 +24,7 @@ import {
 import { CampusWalletCard } from './CampusWalletCard';
 
 export const CustomerDashboard: React.FC = () => {
-  const { orders, ratings, createOrder, submitRating } = useApp();
+  const { orders, ratings, createOrder, submitRating, user } = useApp();
   const [activeTab, setActiveTab] = useState<'track' | 'create'>('track');
   const [orderType, setOrderType] = useState<OrderType>('do_an');
   
@@ -56,7 +56,7 @@ export const CustomerDashboard: React.FC = () => {
   const [ratingScore, setRatingScore] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
 
-  const myOrders = orders.filter(o => o.customer_id === 'user-cust-1' || o.customer_id.startsWith('user-'));
+  const myOrders = orders.filter(o => o.customer_id === user?.id);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
