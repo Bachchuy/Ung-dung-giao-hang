@@ -9,8 +9,9 @@ export const RoleSelector: React.FC = () => {
   const { user, switchRole, addNotification } = useApp();
 
   if (!user) return null;
+  const isAdminAllowed = canSwitchToAdminAccount(user) || user.role === 'quan_tri';
 
-  const roles: { value: UserRole; label: string; icon: React.ReactNode; color: string; desc: string }[] = [
+  const baseRoles: { value: UserRole; label: string; icon: React.ReactNode; color: string; desc: string }[] = [
     { 
       value: 'khach_hang', 
       label: 'Khách hàng', 
@@ -24,15 +25,20 @@ export const RoleSelector: React.FC = () => {
       icon: <Navigation className="w-4 h-4" />, 
       color: 'bg-emerald-500 text-white',
       desc: 'Nhận đơn giao & kiếm thu nhập'
-    },
-    { 
-      value: 'quan_tri', 
-      label: 'Quản trị viên', 
-      icon: <ShieldAlert className="w-4 h-4" />, 
-      color: 'bg-rose-500 text-white',
-      desc: 'Quản lý tài khoản, đơn hàng & biểu đồ'
     }
   ];
+
+  // Only include admin role when the current user is eligible (real admin or allowed by access control)
+  const roles = [...baseRoles];
+  if (isAdminAllowed) {
+    roles.push({
+      value: 'quan_tri',
+      label: 'Quản trị viên',
+      icon: <ShieldAlert className="w-4 h-4" />,
+      color: 'bg-rose-500 text-white',
+      desc: 'Quản lý tài khoản, đơn hàng & biểu đồ'
+    });
+  }
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-lg">
@@ -44,7 +50,7 @@ export const RoleSelector: React.FC = () => {
             <Sparkles className="w-4 h-4 text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
             <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">BK Ship Switcher</span>
           </div>
-          <span className="text-[9px] text-slate-300 font-bold bg-white/10 px-2 py-0.5 rounded-full border border-white/10">Trình mô phỏng</span>
+          {/* Removed demo badge per UX request - only show controls without the 'Trình mô phỏng' label */}
         </div>
         
         <div className="grid grid-cols-3 gap-2 relative z-10">
