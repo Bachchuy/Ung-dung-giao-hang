@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useApp, Order } from '@/context/AppContext';
+import { useApp, Order, calculateOrderPricing } from '@/context/AppContext';
 import { CampusMap } from './CampusMap';
 import { ChatBox } from './ChatBox';
+import { OrderStatusTimeline } from './OrderStatusTimeline';
 import { 
   Navigation, 
   CheckCircle, 
@@ -470,7 +471,12 @@ export const ShipperDashboard: React.FC = () => {
             </div>
           ) : (
             myActiveOrders.map((o) => {
-              const itemCost = o.item_cost || (o.total_amount ? o.total_amount - o.shipping_fee : 30000);
+              const itemCost = calculateOrderPricing(
+                o.order_type,
+                o.shipping_fee,
+                o.item_cost ?? undefined,
+                o.printing_details
+              ).estimatedItemCost;
               return (
                 <div 
                   key={o.id}
@@ -542,6 +548,8 @@ export const ShipperDashboard: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  <OrderStatusTimeline status={o.status} compact />
 
                   {/* Map and Chat Active controls */}
                   {confirmOrderId !== o.id && (

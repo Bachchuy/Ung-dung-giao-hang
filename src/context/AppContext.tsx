@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { canSwitchToAdminAccount } from '@/lib/accessControl';
 
 // --- TYPES ---
 export type UserRole = 'khach_hang' | 'shipper' | 'quan_tri';
@@ -71,6 +72,17 @@ export interface ChatMessage {
   created_at: string;
 }
 
+export interface OrderStatusHistory {
+  id: string;
+  order_id: string;
+  actor_id: string | null;
+  actor_role: UserRole | null;
+  from_status: OrderStatus | null;
+  to_status: OrderStatus;
+  note: string | null;
+  created_at: string;
+}
+
 interface AppNotification {
   id: string;
   title: string;
@@ -80,12 +92,25 @@ interface AppNotification {
   read: boolean;
 }
 
+export interface ActivityLog {
+  id: string;
+  actor_id: string | null;
+  actor_role: UserRole | null;
+  action: string;
+  entity_type: 'auth' | 'order' | 'rating' | 'chat' | 'profile' | 'wallet' | 'system';
+  entity_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
 interface AppContextType {
   user: UserProfile | null;
   users: UserProfile[];
   orders: Order[];
   ratings: Rating[];
   notifications: AppNotification[];
+  activityLogs: ActivityLog[];
+  orderStatusHistory: OrderStatusHistory[];
   isDemoMode: boolean;
   login: (email: string, fullName?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -100,6 +125,74 @@ interface AppContextType {
   deposit: (amount: number) => void;
   chats: ChatMessage[];
   sendChatMessage: (orderId: string, message: string) => Promise<boolean>;
+}
+
+export const STORAGE_KEYS = {
+  user: 'campus_delivery_user',
+  users: 'campus_delivery_users',
+  orders: 'campus_delivery_orders',
+  ratings: 'campus_delivery_ratings',
+  chats: 'campus_delivery_chats',
+  activityLogs: 'campus_delivery_activity_logs',
+  orderStatusHistory: 'campus_delivery_order_status_history',
+} as const;
+
+export function calculateOrderPricing(
+  orderType: OrderType,
+  shippingFee: number,
+  itemCost?: number,
+  printing?: PrintingDetails
+) {
+  let estimatedItemCost = itemCost ?? 30000;
+
+  if (orderType === 'in_an' && printing) {
+    const pageCost = printing.is_color ? 2000 : 500;
+    const pages = 10;
+    estimatedItemCost = printing.copies * pages * pageCost;
+  }
+
+  const totalAmount = estimatedItemCost + shippingFee;
+
+  return { estimatedItemCost, totalAmount };
+}
+
+const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  cho_nhan: ['da_nhan', 'da_huy'],
+  da_nhan: ['dang_giao', 'da_huy'],
+  dang_giao: ['hoan_thanh', 'da_huy'],
+  hoan_thanh: [],
+  da_huy: []
+};
+
+export function canTransitionOrderStatus(
+  order: Order,
+  nextStatus: OrderStatus,
+  actor?: Pick<UserProfile, 'id' | 'role'> | null
+) {
+  if (!actor) return false;
+
+  if (!ORDER_STATUS_TRANSITIONS[order.status].includes(nextStatus)) {
+    return false;
+  }
+
+  if (nextStatus === 'da_nhan') {
+    return actor.role === 'shipper' && order.status === 'cho_nhan';
+  }
+
+  if (nextStatus === 'dang_giao') {
+    return actor.role === 'shipper' && order.shipper_id === actor.id && order.status === 'da_nhan';
+  }
+
+  if (nextStatus === 'hoan_thanh') {
+    return actor.role === 'shipper' && order.shipper_id === actor.id && order.status === 'dang_giao';
+  }
+
+  if (nextStatus === 'da_huy') {
+    if (actor.role === 'quan_tri') return true;
+    return actor.role === 'shipper' && order.shipper_id === actor.id && order.status !== 'hoan_thanh';
+  }
+
+  return false;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -229,6 +322,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [chats, setChats] = useState<ChatMessage[]>([]);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [orderStatusHistory, setOrderStatusHistory] = useState<OrderStatusHistory[]>([]);
 
   // Fetch initial data from Supabase
   const fetchFromSupabase = async () => {
@@ -311,6 +406,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (chatsData) {
         setChats(chatsData);
       }
+
+      // 5. Fetch activity logs
+      const { data: activityLogsData } = await supabase
+        .from('activity_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (activityLogsData) {
+        setActivityLogs(activityLogsData);
+      }
+
+      const { data: orderHistoryData } = await supabase
+        .from('order_status_history')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (orderHistoryData) {
+        setOrderStatusHistory(orderHistoryData);
+      }
     } catch (err) {
       console.error('Lỗi khi truy vấn Supabase:', err);
     }
@@ -319,14 +433,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load initial local data + Sync Supabase Auth session
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedChats = localStorage.getItem('campus_delivery_chats');
-      const storedUsers = localStorage.getItem('campus_delivery_users');
-      const storedOrders = localStorage.getItem('campus_delivery_orders');
-      const storedRatings = localStorage.getItem('campus_delivery_ratings');
+      const storedChats = localStorage.getItem(STORAGE_KEYS.chats);
+      const storedUsers = localStorage.getItem(STORAGE_KEYS.users);
+      const storedOrders = localStorage.getItem(STORAGE_KEYS.orders);
+      const storedRatings = localStorage.getItem(STORAGE_KEYS.ratings);
+      const storedActivityLogs = localStorage.getItem(STORAGE_KEYS.activityLogs);
+      const storedOrderStatusHistory = localStorage.getItem(STORAGE_KEYS.orderStatusHistory);
 
       if (!isSupabaseConfigured) {
         // Demo mode: restore user from localStorage
-        const storedUser = localStorage.getItem('campus_delivery_user');
+        const storedUser = localStorage.getItem(STORAGE_KEYS.user);
         if (storedUser) setUser(JSON.parse(storedUser));
 
         if (storedChats) setChats(JSON.parse(storedChats));
@@ -335,20 +451,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setUsers(JSON.parse(storedUsers));
         } else {
           setUsers(MOCK_USERS);
-          localStorage.setItem('campus_delivery_users', JSON.stringify(MOCK_USERS));
+          localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(MOCK_USERS));
         }
 
         if (storedOrders) {
           setOrders(JSON.parse(storedOrders));
         } else {
           setOrders(MOCK_ORDERS);
-          localStorage.setItem('campus_delivery_orders', JSON.stringify(MOCK_ORDERS));
+          localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(MOCK_ORDERS));
         }
 
         if (storedRatings) {
           setRatings(JSON.parse(storedRatings));
         } else {
           setRatings([]);
+        }
+
+        if (storedActivityLogs) {
+          setActivityLogs(JSON.parse(storedActivityLogs));
+        } else {
+          setActivityLogs([]);
+        }
+
+        if (storedOrderStatusHistory) {
+          setOrderStatusHistory(JSON.parse(storedOrderStatusHistory));
+        } else {
+          setOrderStatusHistory([]);
         }
       }
     }
@@ -378,14 +506,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 created_at: profile.created_at
               };
               setUser(activeProfile);
-              localStorage.setItem('campus_delivery_user', JSON.stringify(activeProfile));
+              localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(activeProfile));
             }
           });
       } else {
         // No valid session → clear stale user from localStorage
-        const storedUser = localStorage.getItem('campus_delivery_user');
+        const storedUser = localStorage.getItem(STORAGE_KEYS.user);
         if (storedUser) {
-          localStorage.removeItem('campus_delivery_user');
+          localStorage.removeItem(STORAGE_KEYS.user);
           setUser(null);
         }
       }
@@ -410,12 +538,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 created_at: profile.created_at
               };
               setUser(activeProfile);
-              localStorage.setItem('campus_delivery_user', JSON.stringify(activeProfile));
+              localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(activeProfile));
             }
           });
       } else {
         setUser(null);
-        localStorage.removeItem('campus_delivery_user');
+        localStorage.removeItem(STORAGE_KEYS.user);
       }
     });
 
@@ -450,6 +578,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           { event: '*', schema: 'public', table: 'chats' },
           () => { fetchFromSupabase(); }
         )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'activity_logs' },
+          () => { fetchFromSupabase(); }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'order_status_history' },
+          () => { fetchFromSupabase(); }
+        )
         .subscribe();
 
       return () => {
@@ -460,9 +598,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Save changes helper for LocalStorage
   const saveState = (updatedUsers: UserProfile[], updatedOrders: Order[], updatedRatings: Rating[]) => {
-    localStorage.setItem('campus_delivery_users', JSON.stringify(updatedUsers));
-    localStorage.setItem('campus_delivery_orders', JSON.stringify(updatedOrders));
-    localStorage.setItem('campus_delivery_ratings', JSON.stringify(updatedRatings));
+    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(updatedUsers));
+    localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(updatedOrders));
+    localStorage.setItem(STORAGE_KEYS.ratings, JSON.stringify(updatedRatings));
     
     setUsers(updatedUsers);
     setOrders(updatedOrders);
@@ -486,8 +624,108 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const saveChats = (updatedChats: ChatMessage[]) => {
-    localStorage.setItem('campus_delivery_chats', JSON.stringify(updatedChats));
+    localStorage.setItem(STORAGE_KEYS.chats, JSON.stringify(updatedChats));
     setChats(updatedChats);
+  };
+
+  const saveActivityLogs = (updatedLogs: ActivityLog[]) => {
+    const limitedLogs = updatedLogs.slice(0, 50);
+    localStorage.setItem(STORAGE_KEYS.activityLogs, JSON.stringify(limitedLogs));
+    setActivityLogs(limitedLogs);
+  };
+
+  const saveOrderHistory = (updatedHistory: OrderStatusHistory[]) => {
+    const limitedHistory = updatedHistory.slice(0, 100);
+    localStorage.setItem(STORAGE_KEYS.orderStatusHistory, JSON.stringify(limitedHistory));
+    setOrderStatusHistory(limitedHistory);
+  };
+
+  const recordActivity = async (params: {
+    action: string;
+    entityType: ActivityLog['entity_type'];
+    entityId?: string | null;
+    metadata?: Record<string, unknown>;
+    actor?: Pick<UserProfile, 'id' | 'role'> | null;
+  }) => {
+    const actor = params.actor ?? user;
+    const entry: ActivityLog = {
+      id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      actor_id: actor?.id ?? null,
+      actor_role: actor?.role ?? null,
+      action: params.action,
+      entity_type: params.entityType,
+      entity_id: params.entityId ?? null,
+      metadata: params.metadata ?? {},
+      created_at: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('activity_logs').insert({
+          actor_id: entry.actor_id,
+          actor_role: entry.actor_role,
+          action: entry.action,
+          entity_type: entry.entity_type,
+          entity_id: entry.entity_id,
+          metadata: entry.metadata
+        });
+        if (error) throw error;
+        setActivityLogs(prev => [entry, ...prev].slice(0, 50));
+      } catch (err) {
+        console.error('Error writing activity log to Supabase:', err);
+      }
+      return;
+    }
+
+    setActivityLogs(prev => {
+      const limited = [entry, ...prev].slice(0, 50);
+      localStorage.setItem(STORAGE_KEYS.activityLogs, JSON.stringify(limited));
+      return limited;
+    });
+  };
+
+  const recordOrderHistory = async (params: {
+    orderId: string;
+    fromStatus: OrderStatus | null;
+    toStatus: OrderStatus;
+    note?: string | null;
+    actor?: Pick<UserProfile, 'id' | 'role'> | null;
+  }) => {
+    const actor = params.actor ?? user;
+    const entry: OrderStatusHistory = {
+      id: `order-hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      order_id: params.orderId,
+      actor_id: actor?.id ?? null,
+      actor_role: actor?.role ?? null,
+      from_status: params.fromStatus,
+      to_status: params.toStatus,
+      note: params.note ?? null,
+      created_at: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('order_status_history').insert({
+          order_id: entry.order_id,
+          actor_id: entry.actor_id,
+          actor_role: entry.actor_role,
+          from_status: entry.from_status,
+          to_status: entry.to_status,
+          note: entry.note
+        });
+        if (error) throw error;
+        setOrderStatusHistory(prev => [entry, ...prev].slice(0, 100));
+      } catch (err) {
+        console.error('Error writing order history to Supabase:', err);
+      }
+      return;
+    }
+
+    setOrderStatusHistory(prev => {
+      const limited = [entry, ...prev].slice(0, 100);
+      localStorage.setItem(STORAGE_KEYS.orderStatusHistory, JSON.stringify(limited));
+      return limited;
+    });
   };
 
   const sendChatMessage = async (orderId: string, message: string) => {
@@ -508,6 +746,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (error) throw error;
         
         fetchFromSupabase();
+        await recordActivity({
+          action: 'chat_message_sent',
+          entityType: 'chat',
+          entityId: orderId,
+          metadata: { preview: message.slice(0, 120) },
+          actor: user
+        });
         return true;
       } catch (err) {
         console.error('Error sending chat to Supabase:', err);
@@ -526,6 +771,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const updatedChats = [...chats, newMsg];
       saveChats(updatedChats);
+      await recordActivity({
+        action: 'chat_message_sent',
+        entityType: 'chat',
+        entityId: orderId,
+        metadata: { preview: message.slice(0, 120) },
+        actor: user
+      });
       return true;
     }
   };
@@ -534,7 +786,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!user) return;
     const updatedUser = { ...user, balance: (user.balance || 0) + amount };
     setUser(updatedUser);
-    localStorage.setItem('campus_delivery_user', JSON.stringify(updatedUser));
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -557,6 +809,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `Đã nạp +${amount.toLocaleString('vi-VN')}đ vào CampusWallet của bạn.`, 
       'success'
     );
+
+    await recordActivity({
+      action: 'wallet_deposit',
+      entityType: 'wallet',
+      entityId: user.id,
+      metadata: { amount, newBalance: updatedUser.balance },
+      actor: user
+    });
   };
 
   // --- ACTIONS ---
@@ -647,8 +907,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
 
         setUser(activeProfile);
-        localStorage.setItem('campus_delivery_user', JSON.stringify(activeProfile));
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(activeProfile));
         addNotification('Đăng nhập thành công', `Chào mừng ${activeProfile.full_name} quay trở lại!`, 'success');
+        await recordActivity({
+          action: 'login_success',
+          entityType: 'auth',
+          entityId: activeProfile.id,
+          metadata: { email: activeProfile.email, source: 'supabase' },
+          actor: activeProfile
+        });
         return { success: true };
       }
 
@@ -683,8 +950,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       setUser(existingProfile);
-      localStorage.setItem('campus_delivery_user', JSON.stringify(existingProfile));
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(existingProfile));
       addNotification('Đăng nhập thành công', `Chào mừng ${existingProfile.full_name} quay trở lại!`, 'success');
+
+      await recordActivity({
+        action: existingProfile ? 'login_success' : 'login_created_mock',
+        entityType: 'auth',
+        entityId: existingProfile.id,
+        metadata: { email: existingProfile.email, source: 'local' },
+        actor: existingProfile
+      });
 
       return { success: true };
     } catch (e: unknown) {
@@ -693,16 +968,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
+    if (user) {
+      void recordActivity({
+        action: 'logout',
+        entityType: 'auth',
+        entityId: user.id,
+        metadata: { email: user.email },
+        actor: user
+      });
+    }
     setUser(null);
-    localStorage.removeItem('campus_delivery_user');
+    localStorage.removeItem(STORAGE_KEYS.user);
     setNotifications([]);
   };
 
   const switchRole = async (newRole: UserRole) => {
     if (!user) return;
+
+    if (newRole === 'quan_tri' && !canSwitchToAdminAccount(user)) {
+      addNotification('Không đủ quyền', 'Chỉ tài khoản admin thật mới được vào khu vực quản trị.', 'warning');
+      return;
+    }
+
     const updatedUser = { ...user, role: newRole };
     setUser(updatedUser);
-    localStorage.setItem('campus_delivery_user', JSON.stringify(updatedUser));
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -722,6 +1012,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addNotification('Chuyển vai trò', `Bạn đang trải nghiệm với vai trò: ${
       newRole === 'khach_hang' ? 'Sinh viên đặt đơn' : newRole === 'shipper' ? 'Shipper giao hàng' : 'Quản trị viên (Admin)'
     }`, 'info');
+
+    await recordActivity({
+      action: 'role_switched',
+      entityType: 'profile',
+      entityId: user.id,
+      metadata: { from: user.role, to: newRole },
+      actor: user
+    });
   };
 
   const createOrder = async (
@@ -729,15 +1027,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     printing?: PrintingDetails
   ) => {
     if (!user) return false;
-
-    let estimatedItemCost = orderData.item_cost || 30000;
-    if (orderData.order_type === 'in_an' && printing) {
-      const pageCost = printing.is_color ? 2000 : 500;
-      const pages = 10;
-      estimatedItemCost = printing.copies * pages * pageCost;
+    if (user.is_banned) {
+      addNotification('Không thể tạo đơn', 'Tài khoản của bạn đã bị khóa, không thể tạo đơn mới.', 'warning');
+      return false;
     }
-    
-    const totalAmount = estimatedItemCost + orderData.shipping_fee;
+
+    const { estimatedItemCost, totalAmount } = calculateOrderPricing(
+      orderData.order_type,
+      orderData.shipping_fee,
+      orderData.item_cost,
+      printing
+    );
 
     if (isSupabaseConfigured && supabase) {
       try {
@@ -778,6 +1078,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         addNotification('Đặt đơn thành công', `Đơn "${orderData.title}" đã được đăng lên hệ thống Supabase.`, 'success');
 
+        await recordActivity({
+          action: 'order_created',
+          entityType: 'order',
+          entityId: newOrderData?.id ?? null,
+          metadata: {
+            order_type: orderData.order_type,
+            shipping_fee: orderData.shipping_fee,
+            total_amount: totalAmount
+          },
+          actor: user
+        });
+
+        await recordOrderHistory({
+          orderId: newOrderData?.id ?? '',
+          fromStatus: null,
+          toStatus: 'cho_nhan',
+          note: 'Đơn hàng được tạo mới',
+          actor: user
+        });
+
 
         fetchFromSupabase();
         return true;
@@ -805,6 +1125,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveState(users, updatedOrders, ratings);
 
       addNotification('Đặt đơn thành công', `Đơn "${newOrder.title}" đã được đăng (Hình thức: COD Tiền mặt).`, 'success');
+
+      await recordActivity({
+        action: 'order_created',
+        entityType: 'order',
+        entityId: newOrder.id,
+        metadata: {
+          order_type: newOrder.order_type,
+          shipping_fee: newOrder.shipping_fee,
+          total_amount: newOrder.total_amount
+        },
+        actor: user
+      });
+
+      await recordOrderHistory({
+        orderId: newOrder.id,
+        fromStatus: null,
+        toStatus: 'cho_nhan',
+        note: 'Đơn hàng được tạo mới',
+        actor: user
+      });
 
 
       return true;
@@ -838,6 +1178,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           'success'
         );
 
+        await recordActivity({
+          action: 'order_accepted',
+          entityType: 'order',
+          entityId: orderId,
+          metadata: { shipper_id: user.id },
+          actor: user
+        });
+
+        await recordOrderHistory({
+          orderId,
+          fromStatus: 'cho_nhan',
+          toStatus: 'da_nhan',
+          note: `Shipper ${user.full_name} đã nhận đơn`,
+          actor: user
+        });
+
         fetchFromSupabase();
         return true;
       } catch (err) {
@@ -847,7 +1203,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } else {
       const targetOrder = orders.find(o => o.id === orderId);
-      if (!targetOrder || targetOrder.status !== 'cho_nhan') return false;
+      if (!targetOrder || !canTransitionOrderStatus(targetOrder, 'da_nhan', user)) return false;
 
       const updatedOrder: Order = {
         ...targetOrder,
@@ -866,13 +1222,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'success'
       );
 
+      await recordActivity({
+        action: 'order_accepted',
+        entityType: 'order',
+        entityId: orderId,
+        metadata: { shipper_id: user.id },
+        actor: user
+      });
+
+      await recordOrderHistory({
+        orderId,
+        fromStatus: 'cho_nhan',
+        toStatus: 'da_nhan',
+        note: `Shipper ${user.full_name} đã nhận đơn`,
+        actor: user
+      });
+
       return true;
     }
   };
 
   const updateOrderStatus = async (orderId: string, nextStatus: OrderStatus, actualItemCost?: number) => {
+    if (!user) return false;
+    if (user.is_banned) {
+      addNotification('Không thể thao tác', 'Tài khoản của bạn đang bị khóa.', 'warning');
+      return false;
+    }
+
     const targetOrder = orders.find(o => o.id === orderId);
     if (!targetOrder) return false;
+
+    if (!canTransitionOrderStatus(targetOrder, nextStatus, user)) {
+      addNotification('Trạng thái không hợp lệ', 'Bạn không có quyền thực hiện chuyển trạng thái này.', 'warning');
+      return false;
+    }
 
     const itemCost = targetOrder.item_cost || (targetOrder.total_amount ? targetOrder.total_amount - targetOrder.shipping_fee : 0);
     const finalItemCost = actualItemCost !== undefined ? actualItemCost : itemCost;
@@ -934,6 +1317,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           );
         }
 
+        await recordActivity({
+          action: `order_status_${nextStatus}`,
+          entityType: 'order',
+          entityId: orderId,
+          metadata: { previous_status: targetOrder.status, next_status: nextStatus, item_cost: finalItemCost, total_amount: finalTotalAmount },
+          actor: user
+        });
+
+        await recordOrderHistory({
+          orderId,
+          fromStatus: targetOrder.status,
+          toStatus: nextStatus,
+          note: nextStatus === 'hoan_thanh'
+            ? `Hoàn thành với COD ${finalTotalAmount.toLocaleString('vi-VN')}đ`
+            : nextStatus === 'dang_giao'
+              ? 'Shipper bắt đầu giao đơn'
+              : 'Đơn hàng bị hủy',
+          actor: user
+        });
+
         fetchFromSupabase();
         return true;
       } catch (err) {
@@ -973,7 +1376,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const activeUserUpdate = updatedUsers.find(u => u.id === user.id);
           if (activeUserUpdate) {
             setUser(activeUserUpdate);
-            localStorage.setItem('campus_delivery_user', JSON.stringify(activeUserUpdate));
+            localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(activeUserUpdate));
           }
         }
 
@@ -998,7 +1401,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const activeUserUpdate = updatedUsers.find(u => u.id === user.id);
             if (activeUserUpdate) {
               setUser(activeUserUpdate);
-              localStorage.setItem('campus_delivery_user', JSON.stringify(activeUserUpdate));
+              localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(activeUserUpdate));
             }
           }
         }
@@ -1018,6 +1421,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const updatedOrders = orders.map(o => o.id === orderId ? updatedOrder : o);
       saveState(updatedUsers, updatedOrders, ratings);
+
+      await recordActivity({
+        action: `order_status_${nextStatus}`,
+        entityType: 'order',
+        entityId: orderId,
+        metadata: { previous_status: targetOrder.status, next_status: nextStatus, item_cost: finalItemCost, total_amount: finalTotalAmount },
+        actor: user
+      });
+
+      await recordOrderHistory({
+        orderId,
+        fromStatus: targetOrder.status,
+        toStatus: nextStatus,
+        note: nextStatus === 'hoan_thanh'
+          ? `Hoàn thành với COD ${finalTotalAmount.toLocaleString('vi-VN')}đ`
+          : nextStatus === 'dang_giao'
+            ? 'Shipper bắt đầu giao đơn'
+            : 'Đơn hàng bị hủy',
+        actor: user
+      });
 
       return true;
     }
@@ -1051,6 +1474,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
 
         addNotification('Đánh giá thành công', 'Cảm ơn phản hồi của bạn giúp xây dựng cộng đồng an toàn!', 'success');
+        await recordActivity({
+          action: 'rating_submitted',
+          entityType: 'rating',
+          entityId: orderId,
+          metadata: { to_id: toId, rating: score },
+          actor: user
+        });
         fetchFromSupabase();
         return true;
       } catch (err) {
@@ -1084,6 +1514,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveState(updatedUsers, orders, updatedRatings);
       addNotification('Đánh giá thành công', 'Cảm ơn phản hồi của bạn giúp xây dựng cộng đồng an toàn!', 'success');
 
+      await recordActivity({
+        action: 'rating_submitted',
+        entityType: 'rating',
+        entityId: orderId,
+        metadata: { to_id: toId, rating: score },
+        actor: user
+      });
+
       return true;
     }
   };
@@ -1107,6 +1545,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           `Đã ${newBan ? 'khóa' : 'mở khóa'} tài khoản của ${targetUser.full_name}.`, 
           newBan ? 'warning' : 'success'
         );
+
+        await recordActivity({
+          action: newBan ? 'user_banned' : 'user_unbanned',
+          entityType: 'profile',
+          entityId: userId,
+          metadata: { target_email: targetUser.email },
+          actor: user
+        });
 
         if (user.id === userId) {
           logout();
@@ -1136,6 +1582,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         `Đã ${newBan ? 'khóa' : 'mở khóa'} tài khoản của ${targetUser.full_name}.`, 
         newBan ? 'warning' : 'success'
       );
+
+      await recordActivity({
+        action: newBan ? 'user_banned' : 'user_unbanned',
+        entityType: 'profile',
+        entityId: userId,
+        metadata: { target_email: targetUser.email },
+        actor: user
+      });
     }
   };
 
@@ -1145,6 +1599,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       users,
       orders,
       ratings,
+      activityLogs,
+      orderStatusHistory,
       notifications,
       isDemoMode,
       login,

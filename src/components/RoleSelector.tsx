@@ -3,9 +3,10 @@
 import React from 'react';
 import { useApp, UserRole } from '@/context/AppContext';
 import { ShoppingBag, Navigation, ShieldAlert, Sparkles } from 'lucide-react';
+import { canSwitchToAdminAccount } from '@/lib/accessControl';
 
 export const RoleSelector: React.FC = () => {
-  const { user, switchRole } = useApp();
+  const { user, switchRole, addNotification } = useApp();
 
   if (!user) return null;
 
@@ -49,16 +50,26 @@ export const RoleSelector: React.FC = () => {
         <div className="grid grid-cols-3 gap-2 relative z-10">
           {roles.map((r) => {
             const isActive = user.role === r.value;
+            const isAdminLocked = r.value === 'quan_tri' && !canSwitchToAdminAccount(user);
             return (
               <button
                 key={r.value}
-                onClick={() => switchRole(r.value)}
+                onClick={() => {
+                  if (isAdminLocked) {
+                    addNotification('Không đủ quyền', 'Chỉ tài khoản admin thật mới vào được khu vực quản trị.', 'warning');
+                    return;
+                  }
+                  switchRole(r.value);
+                }}
+                disabled={isAdminLocked}
                 className={`flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 rounded-2xl transition-all duration-300 relative group overflow-hidden ${
                   isActive 
                     ? `${r.color} shadow-lg scale-[1.02] border border-white/20 font-black` 
-                    : 'bg-white/5 border border-white/5 hover:bg-white/10 text-slate-400 hover:text-white'
+                    : isAdminLocked
+                      ? 'bg-white/5 border border-white/5 text-slate-500 opacity-60 cursor-not-allowed'
+                      : 'bg-white/5 border border-white/5 hover:bg-white/10 text-slate-400 hover:text-white'
                 }`}
-                title={r.desc}
+                title={isAdminLocked ? 'Chỉ admin thật mới được vào khu vực này' : r.desc}
               >
                 {isActive && <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]" />}
                 <div className={`relative z-10 ${isActive ? 'drop-shadow-md' : 'group-hover:scale-110 transition-transform duration-300'}`}>

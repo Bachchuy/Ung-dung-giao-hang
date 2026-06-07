@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useApp, OrderType, OrderStatus, PrintingDetails, Order } from '@/context/AppContext';
+import { useApp, OrderType, OrderStatus, PrintingDetails, Order, calculateOrderPricing } from '@/context/AppContext';
 import { CampusMap } from './CampusMap';
 import { ChatBox } from './ChatBox';
+import { OrderStatusTimeline } from './OrderStatusTimeline';
 import { 
   ShoppingBag, 
   FileText, 
@@ -58,6 +59,18 @@ export const CustomerDashboard: React.FC = () => {
 
   const myOrders = orders.filter(o => o.customer_id === user?.id);
 
+  const currentPricing = calculateOrderPricing(
+    orderType,
+    Number(shippingFee),
+    Number(itemCost),
+    orderType === 'in_an' ? {
+      file_name: pdfFileName,
+      copies,
+      is_color: isColor,
+      is_double_sided: isDoubleSided
+    } : undefined
+  );
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -110,7 +123,7 @@ export const CustomerDashboard: React.FC = () => {
       phone_number: phone,
       notes: finalNotes,
       shipping_fee: Number(shippingFee),
-      item_cost: orderType === 'in_an' ? (copies * 10 * (isColor ? 2000 : 500)) : Number(itemCost)
+      item_cost: currentPricing.estimatedItemCost
     };
 
     const printingDetails: PrintingDetails | undefined = orderType === 'in_an' ? {
@@ -265,6 +278,8 @@ export const CustomerDashboard: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  <OrderStatusTimeline status={o.status} />
 
                   {/* Printing parameters */}
                   {o.printing_details && (
@@ -586,7 +601,7 @@ export const CustomerDashboard: React.FC = () => {
                     <span className="text-[9px] text-slate-400">Mock: 10 trang x {isColor ? '2.000đ' : '500đ'}/trang</span>
                   </div>
                   <span className="text-sm font-extrabold text-violet-700">
-                    {(copies * 10 * (isColor ? 2000 : 500)).toLocaleString('vi-VN')} đ
+                    {currentPricing.estimatedItemCost.toLocaleString('vi-VN')} đ
                   </span>
                 </div>
               </div>
@@ -744,9 +759,7 @@ export const CustomerDashboard: React.FC = () => {
               <div className="flex justify-between text-slate-300">
                 <span>Tiền hàng cần chuẩn bị:</span>
                 <span className="font-semibold text-slate-100">
-                  {orderType === 'in_an'
-                    ? (copies * 10 * (isColor ? 2000 : 500)).toLocaleString('vi-VN')
-                    : Number(itemCost).toLocaleString('vi-VN')} đ
+                  {currentPricing.estimatedItemCost.toLocaleString('vi-VN')} đ
                 </span>
               </div>
               <div className="flex justify-between text-slate-300">
@@ -772,11 +785,7 @@ export const CustomerDashboard: React.FC = () => {
                     </span>
                   )}
                   <span className="text-base font-extrabold text-amber-400">
-                    {Math.max(0, (
-                      (orderType === 'in_an'
-                        ? (copies * 10 * (isColor ? 2000 : 500))
-                        : Number(itemCost)) + Number(shippingFee) - (appliedPromo?.discount || 0)
-                    )).toLocaleString('vi-VN')} đ
+                      {Math.max(0, currentPricing.totalAmount - (appliedPromo?.discount || 0)).toLocaleString('vi-VN')} đ
                   </span>
                 </div>
               </div>

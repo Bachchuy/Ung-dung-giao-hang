@@ -6,12 +6,15 @@ import { AuthScreen } from '@/components/AuthScreen';
 import { CustomerDashboard } from '@/components/CustomerDashboard';
 import { ShipperDashboard } from '@/components/ShipperDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { RoleSelector } from '@/components/RoleSelector';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { Truck, LogOut, Info, ShieldCheck } from 'lucide-react';
+import { isAdminAccount, getAdminAccessDeniedReason } from '@/lib/accessControl';
 
 export default function Home() {
   const { user, logout, isDemoMode } = useApp();
+  const hasAdminAccess = isAdminAccount(user);
 
   // If no student session is active, show the auth/landing page
   if (!user) {
@@ -107,7 +110,7 @@ export default function Home() {
       <main className="flex-1 bg-slate-50">
         {user.role === 'khach_hang' && <CustomerDashboard />}
         {user.role === 'shipper' && <ShipperDashboard />}
-        {user.role === 'quan_tri' && <AdminDashboard />}
+        {user.role === 'quan_tri' && (hasAdminAccess ? <AdminDashboard /> : <AdminAccessDenied reason={getAdminAccessDeniedReason(user)} />)}
       </main>
 
       {/* 4. STICKY FLOATING CONTROL PILL */}

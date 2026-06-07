@@ -194,3 +194,63 @@ CREATE POLICY "Chats are viewable by anyone in the system." ON public.chats
 
 CREATE POLICY "Users can insert messages into their orders." ON public.chats
     FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+-- 8. Activity Logs Table (audit trail for key application events)
+CREATE TABLE public.activity_logs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    actor_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    actor_role TEXT CHECK (actor_role IN ('khach_hang', 'shipper', 'quan_tri')),
+    action TEXT NOT NULL,
+    entity_type TEXT NOT NULL CHECK (entity_type IN ('auth', 'order', 'rating', 'chat', 'profile', 'wallet', 'system')),
+    entity_id UUID,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Enable Row Level Security for activity logs
+ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
+
+-- Activity Logs Policies
+CREATE POLICY "Admins can view activity logs." ON public.activity_logs
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid() AND role = 'quan_tri'
+        )
+    );
+
+CREATE POLICY "Authenticated users can insert their own activity logs." ON public.activity_logs
+    FOR INSERT WITH CHECK (auth.uid() = actor_id);
+
+CREATE INDEX idx_activity_logs_created_at ON public.activity_logs (created_at DESC);
+
+-- 9. Order Status History Table (timeline for each order lifecycle change)
+CREATE TABLE public.order_status_history (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE NOT NULL,
+    actor_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    actor_role TEXT CHECK (actor_role IN ('khach_hang', 'shipper', 'quan_tri')),
+    from_status TEXT CHECK (from_status IN ('cho_nhan', 'da_nhan', 'dang_giao', 'hoan_thanh', 'da_huy')),
+    to_status TEXT NOT NULL CHECK (to_status IN ('cho_nhan', 'da_nhan', 'dang_giao', 'hoan_thanh', 'da_huy')),
+    note TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE public.order_status_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Order history is viewable by admins and participants." ON public.order_status_history
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = auth.uid() AND p.role = 'quan_tri'
+        )
+        OR EXISTS (
+            SELECT 1 FROM public.orders o
+            WHERE o.id = order_id AND (o.customer_id = auth.uid() OR o.shipper_id = auth.uid())
+        )
+    );
+
+CREATE POLICY "Authenticated users can insert order history for their own actions." ON public.order_status_history
+    FOR INSERT WITH CHECK (auth.uid() = actor_id);
+
+CREATE INDEX idx_order_status_history_created_at ON public.order_status_history (created_at DESC);

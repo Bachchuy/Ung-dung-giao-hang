@@ -10,12 +10,13 @@ import {
   Trash2, 
   UserCheck, 
   UserX, 
-  Search
+  Search,
+  Clock3
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
-  const { orders, users, toggleBanUser, updateOrderStatus } = useApp();
-  const [adminTab, setAdminTab] = useState<'orders' | 'users'>('orders');
+  const { orders, users, toggleBanUser, updateOrderStatus, activityLogs, orderStatusHistory } = useApp();
+  const [adminTab, setAdminTab] = useState<'orders' | 'users' | 'logs' | 'history'>('orders');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Stats Calculations
@@ -121,6 +122,22 @@ export const AdminDashboard: React.FC = () => {
             }`}
           >
             Quản lý Sinh viên
+          </button>
+          <button
+            onClick={() => { setAdminTab('logs'); setSearchQuery(''); }}
+            className={`py-2 px-4 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              adminTab === 'logs' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Nhật ký hệ thống
+          </button>
+          <button
+            onClick={() => { setAdminTab('history'); setSearchQuery(''); }}
+            className={`py-2 px-4 rounded-lg text-xs font-semibold transition-all duration-200 ${
+              adminTab === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Lịch sử đơn hàng
           </button>
         </div>
       </div>
@@ -300,6 +317,152 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ACTIVITY LOGS TAB */}
+      {adminTab === 'logs' && (
+        <div className="bg-white border border-slate-100 rounded-[2rem] shadow-sm overflow-hidden flex flex-col">
+          <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                <Clock3 className="w-4 h-4 text-slate-500" />
+                Nhật ký hoạt động gần nhất
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-1">Theo dõi login, tạo đơn, đổi trạng thái, đánh giá và thao tác quản trị</p>
+            </div>
+            <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-bold border border-blue-100 flex items-center gap-1 shadow-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              {activityLogs.length} events
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-100/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="px-5 py-3">Thời gian</th>
+                  <th className="px-5 py-3">Hành động</th>
+                  <th className="px-5 py-3">Vai trò</th>
+                  <th className="px-5 py-3">Đối tượng</th>
+                  <th className="px-5 py-3">Chi tiết</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {activityLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-8 text-center text-slate-400">
+                      Chưa có nhật ký hệ thống nào.
+                    </td>
+                  </tr>
+                ) : (
+                  activityLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-slate-50/50 transition-colors align-top">
+                      <td className="px-5 py-4 whitespace-nowrap text-[10px] text-slate-500 font-semibold">
+                        {new Date(log.created_at).toLocaleString('vi-VN')}
+                      </td>
+                      <td className="px-5 py-4 font-bold text-slate-800">
+                        {log.action}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          log.actor_role === 'quan_tri' ? 'bg-rose-100 text-rose-700' :
+                          log.actor_role === 'shipper' ? 'bg-emerald-100 text-emerald-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {log.actor_role || 'system'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 font-medium text-slate-700">
+                        <div className="flex flex-col gap-0.5">
+                          <span>{log.entity_type}</span>
+                          <span className="text-[10px] text-slate-400 truncate max-w-[160px]">{log.entity_id || '-'}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-[10px] text-slate-500 max-w-[300px]">
+                        <pre className="whitespace-pre-wrap break-words font-sans bg-slate-50 border border-slate-100 rounded-xl p-2">
+                          {JSON.stringify(log.metadata, null, 2)}
+                        </pre>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ORDER HISTORY TAB */}
+      {adminTab === 'history' && (
+        <div className="bg-white border border-slate-100 rounded-[2rem] shadow-sm overflow-hidden flex flex-col">
+          <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-sm">Lịch sử trạng thái đơn hàng</h3>
+              <p className="text-[10px] text-slate-400 mt-1">Timeline riêng của từng đơn để truy vết luồng vận hành</p>
+            </div>
+            <span className="text-[10px] text-violet-600 bg-violet-50 px-2 py-1 rounded-lg font-bold border border-violet-100 flex items-center gap-1 shadow-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+              {orderStatusHistory.length} records
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-100/50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <th className="px-5 py-3">Thời gian</th>
+                  <th className="px-5 py-3">Đơn hàng</th>
+                  <th className="px-5 py-3">Từ trạng thái</th>
+                  <th className="px-5 py-3">Sang trạng thái</th>
+                  <th className="px-5 py-3">Người thao tác</th>
+                  <th className="px-5 py-3">Ghi chú</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {orderStatusHistory.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-8 text-center text-slate-400">
+                      Chưa có lịch sử trạng thái nào.
+                    </td>
+                  </tr>
+                ) : (
+                  orderStatusHistory.map((record) => (
+                    <tr key={record.id} className="hover:bg-slate-50/50 transition-colors align-top">
+                      <td className="px-5 py-4 whitespace-nowrap text-[10px] text-slate-500 font-semibold">
+                        {new Date(record.created_at).toLocaleString('vi-VN')}
+                      </td>
+                      <td className="px-5 py-4 font-bold text-slate-800">
+                        {record.order_id}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">
+                          {record.from_status || '—'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          record.to_status === 'hoan_thanh' ? 'bg-emerald-100 text-emerald-700' :
+                          record.to_status === 'da_huy' ? 'bg-rose-100 text-rose-700' :
+                          record.to_status === 'dang_giao' ? 'bg-indigo-100 text-indigo-700' :
+                          record.to_status === 'da_nhan' ? 'bg-blue-100 text-blue-700' :
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                          {record.to_status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-slate-700 font-medium">
+                        {record.actor_role || 'system'}
+                      </td>
+                      <td className="px-5 py-4 text-[10px] text-slate-500 max-w-[280px] break-words">
+                        {record.note || '-'}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

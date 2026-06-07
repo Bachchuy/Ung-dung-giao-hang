@@ -70,6 +70,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ order, onClose }) => {
             <div>
               <h3 className="font-extrabold text-sm text-slate-100 leading-tight">{peerName}</h3>
               <p className="text-[10px] text-emerald-400 font-bold mt-0.5">{peerRoleLabel}</p>
+              <p className="text-[9px] text-slate-400 font-semibold mt-1 truncate max-w-[220px]">
+                Đơn: {order.title} · Trạng thái: {order.status}
+              </p>
             </div>
           </div>
           {onClose && (
