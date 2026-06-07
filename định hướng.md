@@ -75,261 +75,102 @@ flowchart TD
 2. `AppContext` quyết định mode dựa trên `isSupabaseConfigured`
 3. Nếu **Demo Mode**:
    - load user từ `localStorage`
-   - nạp mock users/orders nếu chưa có dữ liệu
-   - chat/ratings cũng lưu local
-4. Nếu **Production Mode**:
-   - gọi `supabase.auth.getSession()`
-   - fetch dữ liệu từ các bảng
-   - subscribe realtime cho `orders`, `profiles`, `ratings`, `chats`
-
----
-
-## 4) State trung tâm và trách nhiệm
-
-File quan trọng nhất là `src/context/AppContext.tsx`.
-
-### State chính
-
-- `user`: tài khoản đang đăng nhập
-- `users`: danh sách profile
-- `orders`: danh sách đơn hàng
-- `ratings`: đánh giá
-- `notifications`: thông báo UI nội bộ
-- `chats`: tin nhắn theo đơn
-- `isDemoMode`: cờ phân biệt local/supabase
 
-### Actions chính
+  Tài liệu này mô tả cách vận hành, roadmap kỹ thuật và hướng phát triển sản phẩm cho BK Ship — một ứng dụng giao nhận nội khu dành cho sinh viên.
 
-- `login(email, fullName?)`
-- `logout()`
-- `switchRole(role)`
-- `createOrder(orderData, printing?)`
-- `acceptOrder(orderId)`
-- `updateOrderStatus(orderId, status, actualItemCost?)`
-- `submitRating(orderId, toId, score, comment)`
-- `toggleBanUser(userId)`
-- `deposit(amount)`
-- `sendChatMessage(orderId, message)`
+  Mục tiêu tài liệu:
+  - Là sổ tay cho kỹ sư: mô tả nguồn sự thật (AppContext), những phần demo/giả lập, các luồng chính và checklist vận hành.
+  - Đặt lộ trình ưu tiên để chuyển MVP demo sang sản phẩm có thể vận hành lâu dài.
 
-### Nguyên tắc thiết kế
-
-- **UI không tự sửa dữ liệu trực tiếp**; UI luôn gọi action trong context
-- **AppContext là nguồn sự thật cho trạng thái runtime**
-- Nếu có Supabase thì state được cập nhật lại từ DB bằng `fetchFromSupabase()`
-- Nếu không có Supabase thì state được ghi vào `localStorage`
-
----
+  ---
 
-## 5) Mô hình dữ liệu
-
-### Các kiểu chính trong app
-
-- `UserProfile`
-- `Order`
-- `PrintingDetails`
-- `Rating`
-- `ChatMessage`
+  ## Tóm tắt nhanh
 
-### Trạng thái đơn hàng
+  - Công nghệ: Next.js 14 (App Router), React, TypeScript, TailwindCSS.
+  - Backend (optional): Supabase (Postgres + Realtime). Demo mode dùng `localStorage`.
+  - Vai trò: `khach_hang`, `shipper`, `quan_tri`.
+  - Trọng tâm hiện tại: ổn định lõi (flow đơn), chuẩn hóa dữ liệu (schema + RLS), theo dõi (activity_logs, order_status_history), và nâng UX (timeline, chat polish).
 
-```mermaid
-stateDiagram-v2
-    [*] --> cho_nhan: tạo đơn
-    cho_nhan --> da_nhan: shipper nhận
-    da_nhan --> dang_giao: bắt đầu giao
-    dang_giao --> hoan_thanh: giao thành công
-    cho_nhan --> da_huy: bị hủy
-    da_nhan --> da_huy: shipper hủy
-    hoan_thanh --> [*]
-    da_huy --> [*]
-```
+  ---
 
-### Ý nghĩa từng trạng thái
+  ## Roadmap kỹ thuật (4 lớp)
 
-- `cho_nhan`: đơn đang chờ shipper
-- `da_nhan`: đã có shipper nhận
-- `dang_giao`: đang giao thực tế
-- `hoan_thanh`: đã giao xong
-- `da_huy`: bị hủy
+  1) Ổn định lõi (Hoàn thành):
+  - Chuẩn hóa luồng: tạo đơn → nhận → giao → hoàn thành.
+  - Tách rõ Demo Mode vs Production Mode.
+  - Tập trung tính đúng của giá: `item_cost`, `shipping_fee`, `total_amount`.
 
----
+  2) Chuẩn hóa dữ liệu (Hoàn thành/Đang làm):
+  - Bổ sung schema Supabase, trigger, RLS, migration script (`schema.sql`).
+  - Sao lưu hoạt động quan trọng: `activity_logs` và `order_status_history`.
 
-## 6) Luồng nghiệp vụ theo vai trò
+  3) Tăng độ tin cậy (Hoàn thành/Đang làm):
+  - Quản lý quyền: chặn switch admin giả, verify admin bằng email domain.
+  - Dispute & support: cơ chế admin khôi phục/hủy, log đầy đủ để audit.
 
-### 6.1 Khách hàng
+  4) Hoàn thiện trải nghiệm (Đang triển khai):
+  - Mobile-first UI, timeline trạng thái (đã thêm `OrderStatusTimeline`), chat hiển thị trạng thái, empty/loading states, onboarding tối giản.
 
-Màn hình chính: `src/components/CustomerDashboard.tsx`
+  ---
 
-Chức năng:
+  ## Quy ước code & kiến trúc nhỏ
 
-- xem ví `CampusWallet`
-- xem lịch sử đơn
-- tạo đơn mới
-- upload file PDF cho đơn in ấn
-- áp mã giảm giá
-- xem map đơn đang giao
-- chat với shipper
-- đánh giá shipper sau khi hoàn thành
+  - `src/context/AppContext.tsx` là nguồn sự thật runtime — giữ ở mức mỏng nhất có thể; nghiệp vụ quan trọng có thể tách dần thành `services/`.
+  - UI chỉ gọi action (không chỉnh state trực tiếp).
+  - Khi Supabase không cấu hình, app tự động sử dụng localStorage (dễ demo/QA).
+  - Các magic string (storage keys, status values) nằm ở `AppContext` để tránh drift.
 
-#### Luồng tạo đơn
+  ---
 
-1. nhập title, mô tả, vị trí, số điện thoại, phí ship
-2. chọn loại đơn: đồ ăn / đồ uống / in ấn
-3. nếu là in ấn:
-   - upload PDF
-   - chọn số bản
-   - chọn màu / đen trắng
-   - chọn 1 mặt / 2 mặt
-4. bấm tạo đơn
-5. `createOrder()` tính `total_amount`
-6. đơn xuất hiện ở tab theo dõi và bảng tin shipper
+  ## Hướng sản phẩm: làm thế nào để thu hút và giữ người dùng
 
-#### Điểm cần nhớ khi debug
+  Nguyên tắc: giải quyết nỗi đau cốt lõi — tiết kiệm thời gian & tạo sự tin tưởng trong giao dịch COD.
 
-- Chi phí in đang là **mock logic**: `10 trang x số bản x đơn giá`
-- `promoCode` chỉ là logic frontend, chưa phải module voucher thật
-- `CampusWallet` là ví mô phỏng, không phải payment gateway
+  Các ưu tiên sản phẩm:
+  1. Onboarding & First-order flow (1-click): giảm friction, lưu địa chỉ/SDT mặc định, nút reorder.
+  2. Thanh toán: COD + in-app wallet (top-up nhanh) để giảm rủi ro và tăng tỷ lệ hoàn thành.
+  3. Trust: verify email campus, rating 2 chiều, dispute flow, admin recovery.
+  4. Visibility: timeline + chat + map + ETA để giảm lo lắng người dùng.
+  5. Growth: referral + promo cho lần đầu + gamification cho shipper.
 
----
+  ---
 
-### 6.2 Shipper
+  ## MVP Launch checklist (kỹ thuật & vận hành)
 
-Màn hình chính: `src/components/ShipperDashboard.tsx`
+  - [ ] First-order UX tối giản: form ngắn, mặc định thông tin, preview tổng tiền trước khi post.
+  - [ ] Logging & instrumentation: event = signup, first_order, order_submitted, order_completed, dispute. (Mixpanel/GA/Logs)
+  - [ ] Trust rules: verify campus email, ban/appeal UI, admin audit view.
+  - [ ] Operational: in-app support report, simple SLA (1h phản hồi cho dispute), monitoring alerts cho spike lỗi.
+  - [ ] Growth baseline: referral campaign + 1 mã giảm giá cho lần đầu.
 
-Chức năng:
+  ---
 
-- xem stats cá nhân
-- xem bảng tin đơn chờ nhận
-- nhận đơn
-- xem đơn đang nhận
-- đổi trạng thái đơn
-- nhập tiền hàng thực tế khi giao xong
-- mở map / chat theo đơn
+  ## Các đề xuất nhanh để triển khai (1–2 tuần)
 
-#### Luồng giao đơn
+  1) 48–72h: 1‑click reorder + first-order popup (discount) + track event first_order_sent.
+  2) 1 tuần: referral credit + small wallet top-up flow (demo payment UI).
+  3) 1 tuần song song: verify campus email & admin badge rules.
+  4) 2 tuần: instrument dashboard (DAU, conversion, completion rate) và A/B test promo.
 
-1. shipper xem tab `pool`
-2. bấm nhận đơn → `acceptOrder(orderId)`
-3. đơn chuyển sang `da_nhan`
-4. bấm “Bắt đầu đi giao” → `updateOrderStatus(..., 'dang_giao')`
-5. bấm “Đã giao hàng thành công”
-6. nhập hóa đơn thực tế
-7. `updateOrderStatus(..., 'hoan_thanh', actualCost)`
-8. hệ thống cộng/trừ ví, cập nhật uy tín
+  ---
 
-#### Điểm nghiệp vụ quan trọng
+  ## KPIs đề xuất
 
-- shipper bị khóa không được nhận đơn
-- cancel đơn sau khi nhận sẽ bị trừ uy tín
-- hoàn thành đơn sẽ tăng reputation
-- top shipper là người có `orders_completed >= 5`
+  - Conversion (session → order) — mục tiêu 8–12% cho lần pilot.
+  - Order completion rate — mục tiêu ≥ 95%.
+  - Repeat order (7d) — mục tiêu ≥ 15%.
+  - Viral coefficient (referral) — > 0.3 để scale.
 
----
+  ---
 
-### 6.3 Admin
+  ## Tiếp theo (hành động đề xuất ngay bây giờ)
 
-Màn hình chính: `src/components/AdminDashboard.tsx`
+  1. Ghi rõ 3 user personas và 2 core journeys (mình làm nhanh nếu bạn OK).
+  2. Triển khai 1‑click reorder + tracking event (mình có thể code luôn trong repo).
+  3. Thiết lập event collection (Mixpanel/GA) small dashboard.
 
-Chức năng:
+  Nếu OK, chọn 1 hành động để mình bắt tay: `persona`, `reorder`, hoặc `metrics` — mình sẽ cập nhật todo list và tiến hành.
 
-- xem tổng số đơn / user / tỷ lệ hoàn thành / doanh thu ship
-- tìm kiếm đơn và user
-- hủy đơn spam hoặc đơn lỗi
-- khóa / mở khóa user
-
-#### Lưu ý kỹ thuật
-
-- phần chọn role trong bảng admin hiện chỉ là **gợi ý UI**, chưa phải cơ chế phân quyền thật ngoài DB
-- thao tác khóa user gọi `toggleBanUser(userId)`
-- thao tác hủy đơn gọi `updateOrderStatus(orderId, 'da_huy')`
-
----
-
-## 7) Các widget hỗ trợ
-
-### `RoleSelector`
-
-File: `src/components/RoleSelector.tsx`
-
-- thanh nổi ở đáy màn hình
-- cho phép đổi nhanh 3 vai trò
-- phục vụ demo và test flow nhanh
-
-> Đây là công cụ mô phỏng role switching, nên khi sửa bug liên quan quyền truy cập, cần nhớ rằng đây không phải auth thật.
-
-### `NotificationCenter`
-
-File: `src/components/NotificationCenter.tsx`
-
-- hiển thị notification nội bộ từ context
-- có badge đếm số thông báo
-- dùng cho các event như: login, create order, accept order, complete order, ban user
-
-### `ChatBox`
-
-File: `src/components/ChatBox.tsx`
-
-- chat theo từng đơn (`order_id`)
-- có quick replies cho cả khách và shipper
-- scroll xuống cuối khi có tin nhắn mới
-
-### `CampusWalletCard`
-
-File: `src/components/CampusWalletCard.tsx`
-
-- hiển thị số dư hiện tại
-- nút nạp tiền demo
-- cập nhật balance qua `deposit(amount)`
-
-### `CampusMap`
-
-File: `src/components/CampusMap.tsx`
-
-- bản đồ SVG mô phỏng HUST
-- dùng cho 2 chế độ:
-  - chọn vị trí giao hàng
-  - theo dõi lộ trình đơn đang giao
-- có zoom, pan, route animation, marker địa danh
-
----
-
-## 8) Mô hình dữ liệu Supabase
-
-File: `schema.sql`
-
-### Bảng chính
-
-- `profiles`
-- `orders`
-- `printing_details`
-- `ratings`
-- `chats`
-
-### Trigger / policy chính
-
-- tạo profile tự động khi có `auth.users`
-- tăng `orders_completed` và `reputation` khi đơn hoàn thành
-- RLS bật cho toàn bộ bảng
-
-### Quan hệ dữ liệu
-
-```mermaid
-erDiagram
-    profiles ||--o{ orders : customer_id
-    profiles ||--o{ orders : shipper_id
-    orders ||--o| printing_details : order_id
-    orders ||--o{ ratings : order_id
-    profiles ||--o{ ratings : from_id
-    profiles ||--o{ ratings : to_id
-    orders ||--o{ chats : order_id
-    profiles ||--o{ chats : sender_id
-```
-
----
-
-## 9) Cơ chế đồng bộ dữ liệu
-
-### Khi có Supabase
 
 - `fetchFromSupabase()` tải lại toàn bộ dữ liệu chính
 - realtime channel lắng nghe thay đổi từ 4 bảng

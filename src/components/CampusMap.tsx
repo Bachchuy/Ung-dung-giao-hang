@@ -15,11 +15,11 @@ interface LocationCoordinate {
 
 // Tọa độ chi tiết dựa trên bản đồ ĐHBK Hà Nội (HUST) - Grid 720x450
 const LANDMARKS: Record<string, LocationCoordinate> = {
-  parabol: { name: 'parabol', label: 'Cổng Parabol', x: 80, y: 240, icon: '🏫', color: 'from-amber-400 to-orange-500' },
-  d3: { name: 'd3', label: 'Nhà D3 (Canteen)', x: 435, y: 290, icon: '🍔', color: 'from-blue-400 to-indigo-500' },
-  taquangbuu: { name: 'taquangbuu', label: 'Thư viện Tạ Quang Bửu', x: 360, y: 310, icon: '📚', color: 'from-emerald-400 to-teal-500' },
-  b10: { name: 'b10', label: 'KTX B10 (Khu B)', x: 550, y: 120, icon: '🏢', color: 'from-violet-400 to-purple-500' },
-  d8: { name: 'd8', label: 'Nhà D8 (Trung tâm in)', x: 200, y: 350, icon: '🖨️', color: 'from-pink-400 to-rose-500' }
+  parabol: { name: 'parabol', label: 'Cổng Parabol', x: 80, y: 240, color: 'from-amber-400 to-orange-500' },
+  d3: { name: 'd3', label: 'Nhà D3 (Canteen)', x: 435, y: 290, color: 'from-blue-400 to-indigo-500' },
+  taquangbuu: { name: 'taquangbuu', label: 'Thư viện Tạ Quang Bửu', x: 360, y: 310, color: 'from-emerald-400 to-teal-500' },
+  b10: { name: 'b10', label: 'KTX B10 (Khu B)', x: 550, y: 120, color: 'from-violet-400 to-purple-500' },
+  d8: { name: 'd8', label: 'Nhà D8 (Trung tâm in)', x: 200, y: 350, color: 'from-pink-400 to-rose-500' }
 };
 
 interface CampusMapProps {
@@ -537,38 +537,17 @@ export const CampusMap: React.FC<CampusMapProps> = ({ order, onClose, onSelectLo
                       className="fill-slate-850 stroke-slate-700 stroke-2 group-hover:stroke-emerald-400 transition-colors" 
                     />
 
-                    {/* Emoji Inside */}
-                    <text 
-                      x={loc.x} 
-                      y={loc.y + 3.5} 
-                      textAnchor="middle" 
-                      className="text-xs select-none pointer-events-none"
-                    >
-                      {loc.icon}
-                    </text>
+                        {/* Minimal Pin (clean, no emoji) */}
+                        <g transform={`translate(${loc.x}, ${loc.y})`} pointerEvents="none">
+                          <circle cx={0} cy={0} r="10" fill="#0b1226" stroke="#10b981" strokeWidth="2" opacity={isSelectorMode ? 1 : (isTarget ? 1 : 0.95)} />
+                          <circle cx={0} cy={0} r="4.2" fill="#10b981" />
+                        </g>
 
-                    {/* Name board */}
-                    <g transform={`translate(${loc.x}, ${loc.y + 24})`}>
-                      <rect 
-                        x="-55" 
-                        y="-12" 
-                        width="110" 
-                        height="17" 
-                        rx="6" 
-                        className={`fill-slate-900/95 border border-slate-800 ${
-                          isSelectorMode ? 'group-hover:stroke-emerald-500' :
-                          isOrigin ? 'stroke-red-500/40' : isDest ? 'stroke-emerald-500/40' : 'stroke-slate-850'
-                        } stroke transition-all`}
-                      />
-                      <text 
-                        textAnchor="middle" 
-                        className={`text-[8.5px] font-extrabold tracking-wide fill-slate-300 transition-colors ${
-                          isSelectorMode ? 'group-hover:fill-emerald-400' : ''
-                        }`}
-                      >
-                        {loc.label}
-                      </text>
-                    </g>
+                      {/* Name board */}
+                      <g transform={`translate(${loc.x}, ${loc.y + 26})`}>
+                        <rect x="-58" y="-13" width="116" height="18" rx="8" fill="#071023" opacity="0.88" stroke="#0f172a" strokeWidth="0.8" />
+                        <text textAnchor="middle" fill="#cbd5e1" fontSize="9" fontWeight="700">{loc.label}</text>
+                      </g>
 
                     {/* Highlighting badge */}
                     {!isSelectorMode && isOrigin && (
