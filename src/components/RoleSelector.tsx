@@ -53,7 +53,10 @@ export const RoleSelector: React.FC = () => {
           {/* Removed demo badge per UX request - only show controls without the 'Trình mô phỏng' label */}
         </div>
         
-        <div className="grid grid-cols-3 gap-2 relative z-10">
+        <div
+          className="grid gap-2 relative z-10"
+          style={{ gridTemplateColumns: `repeat(${roles.length}, minmax(0, 1fr))` }}
+        >
           {roles.map((r) => {
             const isActive = user.role === r.value;
             const isAdminLocked = r.value === 'quan_tri' && !canSwitchToAdminAccount(user);
@@ -68,7 +71,7 @@ export const RoleSelector: React.FC = () => {
                   switchRole(r.value);
                 }}
                 disabled={isAdminLocked}
-                className={`flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 rounded-2xl transition-all duration-300 relative group overflow-hidden ${
+                className={`flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-2xl transition-all duration-300 relative group overflow-hidden ${
                   isActive 
                     ? `${r.color} shadow-lg scale-[1.02] border border-white/20 font-black` 
                     : isAdminLocked
@@ -77,8 +80,8 @@ export const RoleSelector: React.FC = () => {
                 }`}
                 title={isAdminLocked ? 'Chỉ admin thật mới được vào khu vực này' : r.desc}
               >
-                {isActive && <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]" />}
-                <div className={`relative z-10 ${isActive ? 'drop-shadow-md' : 'group-hover:scale-110 transition-transform duration-300'}`}>
+                {isActive && <div className="absolute inset-0 bg-white/10 rounded-2xl" />}
+                <div className={`relative z-10 ${isActive ? 'drop-shadow-md' : 'group-hover:scale-105 transition-transform duration-300'}`}>
                   {r.icon}
                 </div>
                 <span className="text-[10px] leading-tight tracking-wide relative z-10">{r.label}</span>

@@ -15,11 +15,11 @@ interface LocationCoordinate {
 
 // Tọa độ chi tiết dựa trên bản đồ ĐHBK Hà Nội (HUST) - Grid 720x450
 const LANDMARKS: Record<string, LocationCoordinate> = {
-  parabol: { name: 'parabol', label: 'Cổng Parabol', x: 80, y: 240, color: 'from-amber-400 to-orange-500' },
-  d3: { name: 'd3', label: 'Nhà D3 (Canteen)', x: 435, y: 290, color: 'from-blue-400 to-indigo-500' },
-  taquangbuu: { name: 'taquangbuu', label: 'Thư viện Tạ Quang Bửu', x: 360, y: 310, color: 'from-emerald-400 to-teal-500' },
-  b10: { name: 'b10', label: 'KTX B10 (Khu B)', x: 550, y: 120, color: 'from-violet-400 to-purple-500' },
-  d8: { name: 'd8', label: 'Nhà D8 (Trung tâm in)', x: 200, y: 350, color: 'from-pink-400 to-rose-500' }
+  parabol: { name: 'parabol', label: 'Cổng Parabol', x: 80, y: 240, color: 'from-amber-400 to-orange-500', icon: '📍' },
+  d3: { name: 'd3', label: 'Nhà D3 (Canteen)', x: 435, y: 290, color: 'from-blue-400 to-indigo-500', icon: '📍' },
+  taquangbuu: { name: 'taquangbuu', label: 'Thư viện Tạ Quang Bửu', x: 360, y: 310, color: 'from-emerald-400 to-teal-500', icon: '📍' },
+  b10: { name: 'b10', label: 'KTX B10 (Khu B)', x: 550, y: 120, color: 'from-violet-400 to-purple-500', icon: '📍' },
+  d8: { name: 'd8', label: 'Nhà D8 (Trung tâm in)', x: 200, y: 350, color: 'from-pink-400 to-rose-500', icon: '📍' }
 };
 
 interface CampusMapProps {

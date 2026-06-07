@@ -52,15 +52,17 @@ export const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans">
-      {/* Decorative Blur Orbs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-500/10 blur-[150px] pointer-events-none" />
+    <div className="min-h-screen bg-[#0a0506] text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans">
+      {/* Decorative Blur Orbs - Crimson Red & Amber Gold (Brightened) */}
+      <div className="absolute top-[-20%] left-[-15%] w-[650px] h-[650px] rounded-full bg-red-600/22 blur-[130px] pointer-events-none animate-pulse-subtle" />
+      <div className="absolute bottom-[-15%] right-[-10%] w-[700px] h-[700px] rounded-full bg-amber-600/12 blur-[160px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[-5%] w-[500px] h-[500px] rounded-full bg-red-500/18 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[20%] w-[350px] h-[350px] rounded-full bg-red-900/10 blur-[90px] pointer-events-none" />
 
       {/* Header */}
       <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg shadow-emerald-500/10 border border-slate-700/30 group">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full overflow-hidden shadow-[0_4px_20px_rgba(185,28,28,0.25)] border border-red-900/30 group">
             <img 
               src="/logo.jpg" 
               alt="BK Ship Logo" 
@@ -68,15 +70,15 @@ export const AuthScreen: React.FC = () => {
             />
           </div>
           <div>
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
+            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-red-500 to-amber-400 bg-clip-text text-transparent">
               BK
             </span>
             <span className="font-bold text-xl tracking-tight text-white"> SHIP</span>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-2.5">
-          <span className="text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
-            Startup MVP Demo
+          <span className="text-xs bg-red-950/40 border border-red-800/30 text-red-400 font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-inner">
+            HUST Student Startup MVP
           </span>
         </div>
       </header>
@@ -85,81 +87,82 @@ export const AuthScreen: React.FC = () => {
       <main className="w-full max-w-7xl mx-auto px-6 py-12 grid md:grid-cols-12 gap-12 items-center flex-1 z-10">
         {/* Left Side: Pitch and Visuals */}
         <div className="md:col-span-7 flex flex-col gap-6 text-left">
-          <div className="inline-flex items-center gap-2 bg-slate-800/80 border border-slate-700/50 px-4 py-1.5 rounded-full w-fit">
-            <Zap className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs font-semibold text-slate-300">Giải quyết bài toán Last-meter delivery</span>
+          <div className="inline-flex items-center gap-2 bg-red-950/40 border border-red-900/20 px-4 py-2 rounded-full w-fit shadow-md">
+            <Zap className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span className="text-xs font-semibold text-red-200">Hệ thống giao nhận nội khu Bách Khoa</span>
           </div>
           
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
-            Giao nhận nội khu <br />
-            <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
+            Giao hàng nội khu <br />
+            <span className="bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 bg-clip-text text-transparent filter drop-shadow-[0_4px_12px_rgba(185,28,28,0.15)]">
               Chỉ trong 1 nốt nhạc!
             </span>
           </h1>
           
-          <p className="text-slate-400 text-base sm:text-lg max-w-xl">
-            Nền tảng giúp sinh viên đặt đồ ăn, thức uống và dịch vụ in ấn PDF/tài liệu học tập ngay tại trường. Đồng thời giúp các sinh viên tiện đường nhận đơn để kiếm thêm thu nhập cực nhanh.
+          <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed">
+            Nền tảng kết nối sinh viên đặt đồ ăn, đồ uống và in tài liệu PDF học tập. Shipper là các bạn sinh viên tiện đường đi học nhận đơn để kiếm thêm thu nhập cực nhanh.
           </p>
 
           {/* Key Selling Points */}
           <div className="grid sm:grid-cols-3 gap-4 mt-4">
-            <div className="bg-slate-800/40 border border-slate-800 p-4 rounded-2xl flex flex-col gap-2">
-              <span className="text-2xl">🍔</span>
-              <h3 className="font-bold text-slate-200 text-sm">Ăn uống tận bàn</h3>
-              <p className="text-xs text-slate-400">Đặt ship đồ ăn, thức uống trực tiếp từ cổng trường vào tận lớp học hay phòng KTX.</p>
+            <div className="bg-zinc-900/20 backdrop-blur-sm border border-zinc-800/40 p-5 rounded-2xl flex flex-col gap-2.5 hover:border-red-900/30 hover:bg-zinc-900/30 hover:-translate-y-1 transition-all duration-300 shadow-sm">
+              <span className="text-3xl">🍔</span>
+              <h3 className="font-bold text-zinc-100 text-sm">Ăn uống tận lớp</h3>
+              <p className="text-xs text-zinc-400 leading-normal">Giao trực tiếp đồ ăn, nước uống từ các quán cổng Parabol, Trần Đại Nghĩa đến tận bàn học.</p>
             </div>
-            <div className="bg-slate-800/40 border border-slate-800 p-4 rounded-2xl flex flex-col gap-2">
-              <span className="text-2xl">🖨️</span>
-              <h3 className="font-bold text-slate-200 text-sm">In ấn tài liệu</h3>
-              <p className="text-xs text-slate-400">Upload slide bài giảng PDF, shipper in sẵn và mang đến trước giờ thi của bạn.</p>
+            <div className="bg-zinc-900/20 backdrop-blur-sm border border-zinc-800/40 p-5 rounded-2xl flex flex-col gap-2.5 hover:border-red-900/30 hover:bg-zinc-900/30 hover:-translate-y-1 transition-all duration-300 shadow-sm">
+              <span className="text-3xl">🖨️</span>
+              <h3 className="font-bold text-zinc-100 text-sm">In ấn tài liệu</h3>
+              <p className="text-xs text-zinc-400 leading-normal">Chỉ cần tải lên file PDF ôn thi, shipper sẽ in sẵn và giao đến phòng học trước giờ thi của bạn.</p>
             </div>
-            <div className="bg-slate-800/40 border border-slate-800 p-4 rounded-2xl flex flex-col gap-2">
-              <span className="text-2xl">💸</span>
-              <h3 className="font-bold text-slate-200 text-sm">Chi phí siêu rẻ</h3>
-              <p className="text-xs text-slate-400">Phí ship sinh viên từ 10.000 VNĐ, rẻ hơn nhiều so với đặt Grab/ShopeeFood.</p>
+            <div className="bg-zinc-900/20 backdrop-blur-sm border border-zinc-800/40 p-5 rounded-2xl flex flex-col gap-2.5 hover:border-red-900/30 hover:bg-zinc-900/30 hover:-translate-y-1 transition-all duration-300 shadow-sm">
+              <span className="text-3xl">⚡</span>
+              <h3 className="font-bold text-zinc-100 text-sm">Tip ship siêu rẻ</h3>
+              <p className="text-xs text-zinc-400 leading-normal">Mức phí ship nội khu do bạn quyết định (chỉ từ 5.000đ) - cực kỳ tiết kiệm cho sinh viên.</p>
             </div>
           </div>
         </div>
 
         {/* Right Side: Login Box */}
         <div className="md:col-span-5 w-full flex justify-center">
-          <div className="w-full max-w-md bg-slate-800/60 backdrop-blur-md border border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative">
-            <div className="flex flex-col gap-1.5">
+          <div className="w-full max-w-md bg-zinc-900/40 backdrop-blur-xl border border-zinc-800/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col gap-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent pointer-events-none" />
+            <div className="flex flex-col gap-1.5 relative z-10">
               <h2 className="text-2xl font-bold text-white tracking-tight">Trải nghiệm hệ thống</h2>
-              <p className="text-xs text-slate-400">
-                Hãy đăng nhập bằng email sinh viên trường của bạn.
+              <p className="text-xs text-zinc-400 leading-normal">
+                Đăng nhập nhanh bằng email sinh viên trường của bạn.
               </p>
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold p-3.5 rounded-xl">
-                {error}
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold p-4 rounded-xl relative z-10">
+                ⚠️ {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4 relative z-10">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Họ và tên (Tùy chọn)</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Họ và tên (Tùy chọn)</label>
                 <input
                   type="text"
                   placeholder="Nguyễn Văn A"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="bg-slate-900/80 border border-slate-700/50 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors duration-200"
+                  className="bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-4 py-3.5 text-sm text-white placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors duration-200"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email sinh viên (*.edu)</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Email sinh viên (*.edu)</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-3.5 w-4 h-4 text-slate-500" />
+                  <Mail className="absolute left-4 top-4 w-4 h-4 text-zinc-550" />
                   <input
                     type="email"
                     required
                     placeholder="sv@school.edu.vn"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-900/80 border border-slate-700/50 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors duration-200"
+                    className="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors duration-200"
                   />
                 </div>
               </div>
@@ -167,26 +170,26 @@ export const AuthScreen: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-50 text-slate-950 font-bold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/15 transition-all duration-200 mt-2"
+                className="w-full bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-700 hover:to-amber-600 active:scale-[0.98] disabled:opacity-50 text-white font-bold py-3.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-900/35 transition-all duration-200 mt-2"
               >
                 {isLoading ? 'Đang xử lý...' : 'Đăng nhập sinh viên'}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
 
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-slate-700/50"></div>
-              <span className="flex-shrink mx-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Hoặc trải nghiệm nhanh</span>
-              <div className="flex-grow border-t border-slate-700/50"></div>
+            <div className="relative flex py-1 items-center z-10">
+              <div className="flex-grow border-t border-zinc-800/80"></div>
+              <span className="flex-shrink mx-4 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Hoặc trải nghiệm nhanh</span>
+              <div className="flex-grow border-t border-zinc-800/80"></div>
             </div>
 
             {/* Quick Demo Mock Google login */}
             <button
               onClick={handleGoogleMock}
               disabled={isLoading}
-              className="w-full bg-slate-900 hover:bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-200 font-semibold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-[0.98]"
+              className="w-full bg-zinc-950 hover:bg-[#140809] border border-zinc-800/60 hover:border-red-900/30 text-zinc-200 font-semibold py-3.5 px-4 rounded-xl text-sm flex items-center justify-center gap-2.5 transition-all duration-200 active:scale-[0.98] z-10 shadow-sm"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-zinc-300" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -207,16 +210,16 @@ export const AuthScreen: React.FC = () => {
               Đăng nhập nhanh (Simulated Google Auth)
             </button>
 
-            <div className="flex items-center gap-2 justify-center text-[11px] text-slate-500 bg-slate-900/30 p-2.5 rounded-xl border border-slate-900/20">
-              <ShieldCheck className="w-4 h-4 text-emerald-500/80" />
-              <span>Chỉ chấp nhận email có đuôi <b>.edu</b> hoặc <b>.edu.vn</b></span>
+            <div className="flex items-center gap-2 justify-center text-[10px] text-zinc-400 bg-red-950/20 p-3 rounded-xl border border-red-900/10 z-10">
+              <ShieldCheck className="w-4 h-4 text-red-500/80" />
+              <span>Hệ thống chỉ chấp nhận email trường đại học <b>.edu</b></span>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 z-10 px-6">
+      <footer className="w-full border-t border-zinc-900 py-6 text-center text-xs text-zinc-500 z-10 px-6">
         <p>© 2026 BK Ship Inc. Xây dựng bởi Startup MVP Architect cho môn đổi mới sáng tạo & khởi nghiệp.</p>
       </footer>
     </div>

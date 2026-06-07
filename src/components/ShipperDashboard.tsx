@@ -270,24 +270,31 @@ export const ShipperDashboard: React.FC = () => {
             
             <div className="flex flex-col gap-3 relative z-10">
               {[
-                { rank: 1, name: 'Nguyễn Văn Đạt', orders: 154, color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20' },
-                { rank: 2, name: 'Lê Hoàng Phát', orders: 142, color: 'text-slate-200', bg: 'bg-white/5 border-white/10' },
-                { rank: 3, name: 'Trần Thị Mai', orders: 128, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
-                { rank: 4, name: 'Phạm Minh Tú', orders: 110, color: 'text-slate-400', bg: 'bg-white/5 border-transparent' },
-                { rank: 5, name: 'Bùi Anh Tuấn', orders: 98, color: 'text-slate-400', bg: 'bg-white/5 border-transparent' },
+                { rank: 1, name: 'Nguyễn Văn Đạt', orders: 154 },
+                { rank: 2, name: 'Lê Hoàng Phát', orders: 142 },
+                { rank: 3, name: 'Trần Thị Mai', orders: 128 },
+                { rank: 4, name: 'Phạm Minh Tú', orders: 110 },
+                { rank: 5, name: 'Bùi Anh Tuấn', orders: 98 },
               ].map((shipper) => (
-                <div key={shipper.rank} className={`flex items-center justify-between p-3.5 rounded-2xl border ${shipper.bg} hover:bg-white/10 hover:scale-[1.02] transition-all duration-300 cursor-pointer`}>
+                <div
+                  key={shipper.rank}
+                  className={`flex items-center justify-between p-3.5 rounded-2xl border leaderboard-row ${
+                    shipper.rank === 1 ? 'leader-top-1' : shipper.rank === 2 ? 'leader-top-2' : shipper.rank === 3 ? 'leader-top-3' : 'bg-white/5 border-white/6'
+                  }`}
+                >
                   <div className="flex items-center gap-4">
-                    <span className={`text-xl font-black w-6 text-center ${shipper.color} drop-shadow-md`}>
-                      #{shipper.rank}
-                    </span>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-100">{shipper.name}</span>
-                      {shipper.rank === 1 && (
-                        <span className="text-[9px] text-slate-900 font-black bg-gradient-to-r from-yellow-300 to-amber-500 px-2 py-0.5 rounded-md self-start mt-1 shadow-sm">
-                          HUYỀN THOẠI
-                        </span>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <div className={`medal ${shipper.rank === 1 ? 'gold' : shipper.rank === 2 ? 'silver' : shipper.rank === 3 ? 'bronze' : ''}`}>
+                        <span className="text-sm font-black text-slate-900">{shipper.rank <= 3 ? `#${shipper.rank}` : shipper.rank}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-100">{shipper.name}</span>
+                        {shipper.rank === 1 && (
+                          <span className="text-[9px] text-slate-900 font-black bg-gradient-to-r from-yellow-300 to-amber-500 px-2 py-0.5 rounded-md self-start mt-1 shadow-sm">
+                            HUYỀN THOẠI
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-col items-end">

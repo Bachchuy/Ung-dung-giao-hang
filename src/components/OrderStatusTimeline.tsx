@@ -30,15 +30,15 @@ export const OrderStatusTimeline: React.FC<{ status: OrderStatus; compact?: bool
   className = '',
 }) => {
   if (status === 'da_huy') {
-    return (
-      <div className={`rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3 ${className}`}>
-        <div className="flex items-center gap-2 text-rose-700 font-bold text-[11px] uppercase tracking-wider">
-          <Ban className="w-3.5 h-3.5" />
-          {STATUS_LABELS.da_huy}
+      return (
+        <div className={`rounded-2xl border border-rose-200 bg-rose-50/8 px-4 py-3 ${className}`}>
+          <div className="flex items-center gap-2 text-rose-300 font-extrabold text-[11px] uppercase tracking-wider">
+            <Ban className="w-4 h-4" />
+            {STATUS_LABELS.da_huy}
+          </div>
+          <p className="text-[11px] text-rose-400 mt-1">Timeline kết thúc sớm vì đơn này đã bị hủy.</p>
         </div>
-        <p className="text-[11px] text-rose-600 mt-1">Timeline kết thúc sớm vì đơn này đã bị hủy.</p>
-      </div>
-    );
+      );
   }
 
   const activeIndex = STEPS.findIndex((step) => step.key === status);
@@ -50,17 +50,18 @@ export const OrderStatusTimeline: React.FC<{ status: OrderStatus; compact?: bool
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tiến trình đơn hàng</p>
           <p className="text-xs font-bold text-slate-800 mt-0.5">{STATUS_LABELS[status]}</p>
         </div>
-        <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded-full">
+          <span className="text-[10px] font-bold text-slate-300 bg-black/10 border border-white/6 px-2 py-1 rounded-full">
           {activeIndex < 0 ? '0/4' : `${Math.min(activeIndex + 1, STEPS.length)}/4`}
         </span>
       </div>
 
       <div className="relative">
         <div className="absolute left-3 right-3 top-3 h-1 rounded-full bg-slate-200" />
-        <div
-          className="absolute left-3 top-3 h-1 rounded-full bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-500 transition-all duration-500"
-          style={{ width: activeIndex >= 0 ? `${(activeIndex / (STEPS.length - 1)) * 100}%` : '0%' }}
-        />
+          <div className="absolute left-3 top-3 h-1 rounded-full bg-slate-800/20" />
+          <div
+            className="absolute left-3 top-3 h-1 rounded-full transition-all duration-700"
+            style={{ width: activeIndex >= 0 ? `${(activeIndex / (STEPS.length - 1)) * 100}%` : '0%', background: 'linear-gradient(90deg,#06b6d4,#7c3aed)'}}
+          />
 
         <div className={`relative grid ${compact ? 'grid-cols-4' : 'grid-cols-2 sm:grid-cols-4'} gap-2`}>
           {STEPS.map((step, index) => {
@@ -73,15 +74,15 @@ export const OrderStatusTimeline: React.FC<{ status: OrderStatus; compact?: bool
                 key={step.key}
                 className={`flex flex-col items-center text-center gap-2 pt-7 ${compact ? 'px-0' : 'px-1'}`}
               >
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center border-2 shadow-sm transition-colors ${
-                    isCompleted || isActive
-                      ? 'bg-slate-900 border-slate-900 text-white'
-                      : 'bg-white border-slate-200 text-slate-400'
-                  }`}
-                >
-                  <span className={`transition-opacity ${isFuture ? 'opacity-50' : 'opacity-100'}`}>{step.icon}</span>
-                </div>
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center border-2 shadow-sm transition-all ${
+                      isCompleted || isActive
+                        ? 'bg-gradient-to-br from-emerald-400 to-cyan-400 border-transparent text-white glow-accent'
+                        : 'bg-white border-slate-200 text-slate-400'
+                    }`}
+                  >
+                    <span className={`transition-opacity ${isFuture ? 'opacity-60' : 'opacity-100'}`}>{step.icon}</span>
+                  </div>
                 <div className="flex flex-col gap-0.5">
                   <span className={`text-[10px] font-bold ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>{step.label}</span>
                   {!compact && <span className="text-[9px] text-slate-400 leading-tight">{step.hint}</span>}

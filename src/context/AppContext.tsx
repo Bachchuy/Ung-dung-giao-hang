@@ -125,6 +125,7 @@ interface AppContextType {
   deposit: (amount: number) => void;
   chats: ChatMessage[];
   sendChatMessage: (orderId: string, message: string) => Promise<boolean>;
+  updateUserAvatar: (file: File) => Promise<boolean>;
 }
 
 export const STORAGE_KEYS = {
@@ -817,6 +818,72 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       metadata: { amount, newBalance: updatedUser.balance },
       actor: user
     });
+  };
+
+  const updateUserAvatar = async (file: File) => {
+    if (!user) return false;
+
+    // Supabase path: upload to storage bucket 'avatars' and update profiles.avatar_url
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const ext = file.name.split('.').pop() ?? 'jpg';
+        const fileName = `${user.id}_${Date.now()}.${ext}`;
+        const path = `avatars/${user.id}/${fileName}`;
+
+        // Upload
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { cacheControl: '3600', upsert: true });
+        if (uploadError) throw uploadError;
+
+        // Get public URL (use signed URL if you use private buckets)
+        const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(path);
+        const publicUrl = publicData?.publicUrl || '';
+
+        // Update profile record
+        const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+        if (updateError) throw updateError;
+
+        const updatedUser = { ...user, avatar_url: publicUrl };
+        setUser(updatedUser);
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
+
+        addNotification('Ảnh đại diện cập nhật', 'Ảnh đại diện đã được tải lên và lưu trên Supabase.', 'success');
+
+        await recordActivity({ action: 'update_avatar', entityType: 'profile', entityId: user.id, actor: user });
+
+        // Refresh data
+        fetchFromSupabase();
+        return true;
+      } catch (err) {
+        console.error('Error uploading avatar to Supabase:', err);
+        addNotification('Lỗi upload', 'Không thể tải ảnh lên. Vui lòng thử lại.', 'warning');
+        return false;
+      }
+    }
+
+    // Demo/local mode: store data URL in localStorage
+    try {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const updatedUser = { ...user, avatar_url: dataUrl };
+      setUser(updatedUser);
+
+      const updatedUsers = users.map(u => u.id === user.id ? updatedUser : u);
+      saveState(updatedUsers, orders, ratings);
+
+      addNotification('Ảnh đại diện cập nhật', 'Ảnh đại diện đã được lưu cục bộ.', 'success');
+
+      await recordActivity({ action: 'update_avatar', entityType: 'profile', entityId: user.id, actor: user });
+      return true;
+    } catch (err) {
+      console.error('Error saving avatar locally:', err);
+      addNotification('Lỗi lưu ảnh', 'Không thể lưu ảnh cục bộ.', 'warning');
+      return false;
+    }
   };
 
   // --- ACTIONS ---
@@ -1614,6 +1681,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearNotification,
       addNotification,
       deposit,
+      	updateUserAvatar,
       chats,
       sendChatMessage
     }}>
