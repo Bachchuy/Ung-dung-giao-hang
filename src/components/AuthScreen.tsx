@@ -60,14 +60,18 @@ export const AuthScreen: React.FC = () => {
       {/* Header */}
       <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between z-10">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <Truck className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg shadow-emerald-500/10 border border-slate-700/30 group">
+            <img 
+              src="/logo.jpg" 
+              alt="BK Ship Logo" 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            />
           </div>
           <div>
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-              CAMPUS
+              BK
             </span>
-            <span className="font-bold text-xl tracking-tight text-white"> EXPRESS</span>
+            <span className="font-bold text-xl tracking-tight text-white"> SHIP</span>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-2.5">
@@ -213,7 +217,7 @@ export const AuthScreen: React.FC = () => {
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 z-10 px-6">
-        <p>© 2026 Campus Express Inc. Xây dựng bởi Startup MVP Architect cho môn đổi mới sáng tạo & khởi nghiệp.</p>
+        <p>© 2026 BK Ship Inc. Xây dựng bởi Startup MVP Architect cho môn đổi mới sáng tạo & khởi nghiệp.</p>
       </footer>
     </div>
   );

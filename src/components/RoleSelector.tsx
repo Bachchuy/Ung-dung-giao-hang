@@ -41,7 +41,7 @@ export const RoleSelector: React.FC = () => {
         <div className="flex items-center justify-between px-3 pt-1 relative z-10">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-400 animate-pulse drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-            <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">Campus Express Switcher</span>
+            <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">BK Ship Switcher</span>
           </div>
           <span className="text-[9px] text-slate-300 font-bold bg-white/10 px-2 py-0.5 rounded-full border border-white/10">Trình mô phỏng</span>
         </div>

@@ -344,7 +344,7 @@ export const CustomerDashboard: React.FC = () => {
                   {ratingOrderId === o.id && (
                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mt-1 flex flex-col gap-3 animate-in slide-in-from-top-1">
                       <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                        <span className="text-xs font-bold text-slate-700">Đánh giá 2 chiều (Chỉ có tại Campus Express)</span>
+                        <span className="text-xs font-bold text-slate-700">Đánh giá 2 chiều (Chỉ có tại BK Ship)</span>
                         <button 
                           onClick={() => setRatingOrderId(null)}
                           className="text-[10px] font-bold text-slate-400 hover:text-slate-600"

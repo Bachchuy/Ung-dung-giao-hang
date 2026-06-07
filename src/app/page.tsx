@@ -43,17 +43,20 @@ export default function Home() {
           
           {/* Logo */}
           <div className="flex items-center gap-3 relative z-10">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center shadow-[0_4px_15px_rgba(15,23,42,0.3)] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Truck className="w-5 h-5 text-emerald-400 drop-shadow-md group-hover:scale-110 transition-transform duration-300" />
+            <div className="w-10 h-10 rounded-full overflow-hidden shadow-[0_4px_15px_rgba(15,23,42,0.15)] border border-slate-100 group">
+              <img 
+                src="/logo.jpg" 
+                alt="BK Ship Logo" 
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+              />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
                 <span className="font-black text-sm tracking-tight text-slate-900 uppercase">
-                  Campus
+                  BK
                 </span>
                 <span className="font-extrabold text-sm tracking-tight text-emerald-600 uppercase bg-emerald-50 px-1.5 rounded-md">
-                  Express
+                  Ship
                 </span>
               </div>
               <span className="text-[9px] font-bold text-slate-400 tracking-wider">Fast & Secure Delivery</span>

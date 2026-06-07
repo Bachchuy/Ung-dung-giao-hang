@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Campus Express - Giao Nhận Nội Khu Sinh Viên",
+  title: "BK Ship - Giao Nhận Nội Khu Sinh Viên",
   description: "Nền tảng giao nhận đồ ăn, thức uống và in ấn tài liệu nội khu trường đại học & ký túc xá nhanh chóng, an toàn, tiết kiệm.",
 };
 
