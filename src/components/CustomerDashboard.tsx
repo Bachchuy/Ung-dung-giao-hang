@@ -49,9 +49,15 @@ export const CustomerDashboard: React.FC = () => {
     const LANDMARKS_LABELS: Record<string, string> = {
       taquangbuu: 'Thư viện Tạ Quang Bửu',
       parabol: 'Cổng Parabol',
-      d3: 'Nhà D3 (Canteen)',
-      b10: 'KTX B10 (Khu B)',
-      d8: 'Nhà D8 (Trung tâm in)'
+      b1: 'Toà B1',
+      d5: 'Toà D5',
+      d3: 'Toà D3',
+      d7: 'Toà D7',
+      d4: 'Toà D4',
+      d6: 'Toà D6',
+      c1: 'Toà C1',
+      b10: 'KTX B10',
+      d8: 'Toà D8'
     };
     if (selectedBuilding === 'other') {
       setLocation(roomNumber ? `${customLocation} (Phòng ${roomNumber})` : customLocation);
@@ -720,9 +726,15 @@ export const CustomerDashboard: React.FC = () => {
                   <div className="relative bg-white border-2 border-amber-400 rounded-xl px-4 py-3 text-xs text-slate-800 font-semibold select-none">
                     {selectedBuilding === 'taquangbuu' && 'Thư viện Tạ Quang Bửu 📚'}
                     {selectedBuilding === 'parabol' && 'Cổng Parabol 📍'}
-                    {selectedBuilding === 'd3' && 'Nhà D3 (Canteen) 🏢'}
-                    {selectedBuilding === 'b10' && 'KTX B10 (Khu B) 🏠'}
-                    {selectedBuilding === 'd8' && 'Nhà D8 (Trung tâm in) 🖨️'}
+                    {selectedBuilding === 'b1' && 'Toà B1 🏢'}
+                    {selectedBuilding === 'd5' && 'Toà D5 🏢'}
+                    {selectedBuilding === 'd3' && 'Toà D3 🏢'}
+                    {selectedBuilding === 'd7' && 'Toà D7 🏢'}
+                    {selectedBuilding === 'd4' && 'Toà D4 🏢'}
+                    {selectedBuilding === 'd6' && 'Toà D6 🏢'}
+                    {selectedBuilding === 'c1' && 'Toà C1 🏢'}
+                    {selectedBuilding === 'b10' && 'KTX B10 🏠'}
+                    {selectedBuilding === 'd8' && 'Toà D8 🏢'}
                   </div>
                 </div>
               )}
