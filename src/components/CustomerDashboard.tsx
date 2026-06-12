@@ -25,6 +25,21 @@ import {
 } from 'lucide-react';
 import { CampusWalletCard } from './CampusWalletCard';
 
+const BUILDINGS_LIST = [
+  { id: 'taquangbuu', label: 'Thư viện Tạ Quang Bửu 📚' },
+  { id: 'parabol', label: 'Cổng Parabol 📍' },
+  { id: 'b1', label: 'Toà B1 🏢' },
+  { id: 'd5', label: 'Toà D5 🏢' },
+  { id: 'd3', label: 'Toà D3 🏢' },
+  { id: 'd7', label: 'Toà D7 🏢' },
+  { id: 'd4', label: 'Toà D4 🏢' },
+  { id: 'd6', label: 'Toà D6 🏢' },
+  { id: 'c1', label: 'Toà C1 🏢' },
+  { id: 'b10', label: 'KTX B10 🏠' },
+  { id: 'd8', label: 'Toà D8 🏢' },
+  { id: 'other', label: 'Địa điểm khác ✏️' }
+];
+
 export const CustomerDashboard: React.FC = () => {
   const { orders, ratings, createOrder, submitRating, user, updateOrderStatus } = useApp();
   const [activeTab, setActiveTab] = useState<'track' | 'create' | 'history'>('track');
@@ -675,20 +690,7 @@ export const CustomerDashboard: React.FC = () => {
             <div className="flex flex-col gap-2">
               <label className="text-[11px] font-bold text-slate-800">Chọn Tòa nhà / Địa điểm giao hàng *</label>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'taquangbuu', label: 'Thư viện Tạ Quang Bửu 📚' },
-                  { id: 'parabol', label: 'Cổng Parabol 📍' },
-                  { id: 'b1', label: 'Toà B1 🏢' },
-                  { id: 'd5', label: 'Toà D5 🏢' },
-                  { id: 'd3', label: 'Toà D3 🏢' },
-                  { id: 'd7', label: 'Toà D7 🏢' },
-                  { id: 'd4', label: 'Toà D4 🏢' },
-                  { id: 'd6', label: 'Toà D6 🏢' },
-                  { id: 'c1', label: 'Toà C1 🏢' },
-                  { id: 'b10', label: 'KTX B10 🏠' },
-                  { id: 'd8', label: 'Toà D8🏢' },
-                  { id: 'other', label: 'Địa điểm khác ✏️' }
-                ].map((building) => (
+                {BUILDINGS_LIST.map((building) => (
                   <button
                     key={building.id}
                     type="button"
@@ -723,18 +725,8 @@ export const CustomerDashboard: React.FC = () => {
               ) : (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-bold text-slate-800">Địa điểm đã chọn</label>
-                  <div className="relative bg-white border-2 border-amber-400 rounded-xl px-4 py-3 text-xs text-slate-800 font-semibold select-none">
-                    {selectedBuilding === 'taquangbuu' && 'Thư viện Tạ Quang Bửu 📚'}
-                    {selectedBuilding === 'parabol' && 'Cổng Parabol 📍'}
-                    {selectedBuilding === 'b1' && 'Toà B1 🏢'}
-                    {selectedBuilding === 'd5' && 'Toà D5 🏢'}
-                    {selectedBuilding === 'd3' && 'Toà D3 🏢'}
-                    {selectedBuilding === 'd7' && 'Toà D7 🏢'}
-                    {selectedBuilding === 'd4' && 'Toà D4 🏢'}
-                    {selectedBuilding === 'd6' && 'Toà D6 🏢'}
-                    {selectedBuilding === 'c1' && 'Toà C1 🏢'}
-                    {selectedBuilding === 'b10' && 'KTX B10 🏠'}
-                    {selectedBuilding === 'd8' && 'Toà D8 🏢'}
+                  <div className="relative bg-white border-2 border-amber-400 rounded-xl px-4 py-3 text-xs text-slate-800 font-semibold select-none min-h-[42px] flex items-center">
+                    {BUILDINGS_LIST.find(b => b.id === selectedBuilding)?.label || 'Vui lòng chọn địa điểm'}
                   </div>
                 </div>
               )}
