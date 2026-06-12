@@ -5,38 +5,39 @@ import { useApp, OrderType, OrderStatus, PrintingDetails, Order, calculateOrderP
 import { CampusMap } from './CampusMap';
 import { ChatBox } from './ChatBox';
 import { OrderStatusTimeline } from './OrderStatusTimeline';
-import { 
-  ShoppingBag, 
-  FileText, 
-  Pizza, 
-  Coffee, 
-  MapPin, 
-  Phone, 
-  DollarSign, 
-  FileDown, 
-  FileUp, 
-  Check, 
-  Star, 
+import {
+  ShoppingBag,
+  FileText,
+  Pizza,
+  Coffee,
+  MapPin,
+  Phone,
+  DollarSign,
+  FileDown,
+  FileUp,
+  Check,
+  Star,
   MessageSquare,
   Clock,
   History,
-  Ticket
+  Ticket,
+  XCircle
 } from 'lucide-react';
 import { CampusWalletCard } from './CampusWalletCard';
 
 export const CustomerDashboard: React.FC = () => {
-  const { orders, ratings, createOrder, submitRating, user } = useApp();
-  const [activeTab, setActiveTab] = useState<'track' | 'create'>('track');
+  const { orders, ratings, createOrder, submitRating, user, updateOrderStatus } = useApp();
+  const [activeTab, setActiveTab] = useState<'track' | 'create' | 'history'>('track');
   const [orderType, setOrderType] = useState<OrderType>('do_an');
-  
+
   // Overlays state
   const [selectedMapOrder, setSelectedMapOrder] = useState<Order | null>(null);
   const [selectedChatOrder, setSelectedChatOrder] = useState<Order | null>(null);
-  
+
   // Order Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  
+
   const [selectedBuilding, setSelectedBuilding] = useState<string>('taquangbuu');
   const [roomNumber, setRoomNumber] = useState('');
   const [customLocation, setCustomLocation] = useState('');
@@ -65,8 +66,8 @@ export const CustomerDashboard: React.FC = () => {
   const [shippingFee, setShippingFee] = useState(10000);
   const [itemCost, setItemCost] = useState(30000);
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<{code: string, discount: number} | null>(null);
-  
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string, discount: number } | null>(null);
+
   // Printing states
   const [pdfFileName, setPdfFileName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -189,6 +190,12 @@ export const CustomerDashboard: React.FC = () => {
     }
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')) {
+      await updateOrderStatus(orderId, 'da_huy');
+    }
+  };
+
   const getStatusBadge = (status: OrderStatus) => {
     const styles: Record<OrderStatus, string> = {
       cho_nhan: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -221,64 +228,75 @@ export const CustomerDashboard: React.FC = () => {
       <div className="flex bg-white/80 p-1.5 rounded-[2rem] border border-rose-100 gap-1.5 backdrop-blur-md shadow-sm">
         <button
           onClick={() => setActiveTab('track')}
-          className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-            activeTab === 'track' 
-              ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-md shadow-red-500/10' 
-              : 'text-gray-500 hover:text-red-500 hover:bg-gray-100/50'
-          }`}
+          className={`flex-1 py-2 px-2 rounded-2xl text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === 'track'
+            ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-md shadow-red-500/10'
+            : 'text-gray-500 hover:text-red-500 hover:bg-gray-100/50'
+            }`}
         >
-          <History className="w-4 h-4" />
-          Theo dõi đơn hàng ({myOrders.length})
+          <Clock className="w-3.5 h-3.5" />
+          Đang giao ({myOrders.filter(o => o.status !== 'hoan_thanh' && o.status !== 'da_huy').length})
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex-1 py-2 px-2 rounded-2xl text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === 'history'
+            ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-md shadow-red-500/10'
+            : 'text-gray-500 hover:text-red-500 hover:bg-gray-100/50'
+            }`}
+        >
+          <History className="w-3.5 h-3.5" />
+          Lịch sử ({myOrders.filter(o => o.status === 'hoan_thanh' || o.status === 'da_huy').length})
         </button>
         <button
           onClick={() => setActiveTab('create')}
-          className={`flex-1 py-3 px-4 rounded-2xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-            activeTab === 'create' 
-              ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-md shadow-red-500/10' 
-              : 'text-gray-500 hover:text-red-500 hover:bg-gray-100/50'
-          }`}
+          className={`flex-1 py-2 px-2 rounded-2xl text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${activeTab === 'create'
+            ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-md shadow-red-500/10'
+            : 'text-gray-500 hover:text-red-500 hover:bg-gray-100/50'
+            }`}
         >
-          <ShoppingBag className="w-4 h-4" />
-          Tạo đơn hàng mới
+          <ShoppingBag className="w-3.5 h-3.5" />
+          Tạo đơn mới
         </button>
       </div>
 
-      {/* TRACK TAB */}
-      {activeTab === 'track' && (
+      {/* TRACK & HISTORY TABS */}
+      {(activeTab === 'track' || activeTab === 'history') && (
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-700">Lịch sử đơn đặt của bạn</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-700">
+              {activeTab === 'track' ? 'Đơn hàng đang giao' : 'Lịch sử đơn hàng'}
+            </h2>
             <span className="text-[10px] text-gray-500 font-semibold flex items-center gap-1">⏱️ Realtime</span>
           </div>
 
-          {myOrders.length === 0 ? (
+          {(activeTab === 'track' ? myOrders.filter(o => o.status !== 'hoan_thanh' && o.status !== 'da_huy') : myOrders.filter(o => o.status === 'hoan_thanh' || o.status === 'da_huy')).length === 0 ? (
             <div className="bg-white border border-rose-100 rounded-[2rem] py-12 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-3.5 backdrop-blur-md">
               <span className="text-4xl filter drop-shadow-md">📦</span>
-              <h3 className="font-bold text-gray-800 text-sm">Bạn chưa có đơn đặt nào</h3>
-              <p className="text-xs text-gray-500 max-w-xs leading-relaxed">
-                Hãy click qua tab &quot;Tạo đơn hàng mới&quot; ở trên để gửi đơn đồ ăn, trà sữa hoặc in tài liệu học tập ngay nhé!
-              </p>
+              <h3 className="font-bold text-gray-800 text-sm">Bạn chưa có đơn hàng nào ở mục này</h3>
+              {activeTab === 'track' && (
+                <p className="text-xs text-gray-500 max-w-xs leading-relaxed">
+                  Hãy click qua tab &quot;Tạo đơn mới&quot; ở trên để gửi đơn đồ ăn, trà sữa hoặc in tài liệu học tập ngay nhé!
+                </p>
+              )}
             </div>
           ) : (
-            myOrders.map((o) => {
+            (activeTab === 'track' ? myOrders.filter(o => o.status !== 'hoan_thanh' && o.status !== 'da_huy') : myOrders.filter(o => o.status === 'hoan_thanh' || o.status === 'da_huy')).map((o) => {
               const hasShipper = !!o.shipper_id;
               const isFinished = o.status === 'hoan_thanh';
               const alreadyRated = ratings.some(r => r.order_id === o.id && r.from_id === 'user-cust-1');
 
               return (
-                <div 
+                <div
                   key={o.id}
                   className="bg-white/95 backdrop-blur-md border border-amber-300 rounded-[2rem] p-5 shadow-sm hover:border-amber-500 hover:-translate-y-0.5 transition-all duration-300 flex flex-col gap-4 relative overflow-hidden group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
                   <div className="flex justify-between items-start gap-4 relative z-10">
                     <div className="flex gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner ${
-                        o.order_type === 'do_an' ? 'bg-amber-100 text-amber-600 border border-amber-200' :
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner ${o.order_type === 'do_an' ? 'bg-amber-100 text-amber-600 border border-amber-200' :
                         o.order_type === 'do_uong' ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-violet-100 text-violet-600 border border-violet-200'
-                      }`}>
+                        }`}>
                         {o.order_type === 'do_an' ? <Pizza className="w-5 h-5" /> :
-                         o.order_type === 'do_uong' ? <Coffee className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                          o.order_type === 'do_uong' ? <Coffee className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                       </div>
                       <div>
                         <h4 className="font-bold text-slate-800 text-sm leading-snug">{o.title}</h4>
@@ -347,12 +365,26 @@ export const CustomerDashboard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Nút hủy đơn hàng nếu chưa có shipper nhận */}
+                  {!hasShipper && o.status === 'cho_nhan' && (
+                    <div className="flex gap-2 border-t border-amber-200 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => handleCancelOrder(o.id)}
+                        className="w-full bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 text-[11px] font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 border border-slate-200 hover:border-red-200 active:scale-95 shadow-sm"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Hủy đơn hàng
+                      </button>
+                    </div>
+                  )}
+
                   {/* Shipper Details */}
                   {hasShipper ? (
                     <div className="border-t border-amber-200 pt-3 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2.5">
-                        <img 
-                          src={o.shipper_avatar} 
+                        <img
+                          src={o.shipper_avatar}
                           alt={o.shipper_name}
                           className="w-8 h-8 rounded-full border border-amber-300"
                         />
@@ -361,7 +393,7 @@ export const CustomerDashboard: React.FC = () => {
                           <p className="text-[10px] text-amber-600 font-semibold mt-0.5 flex items-center gap-1">🚴 Shipper nội khu trường</p>
                         </div>
                       </div>
-                      
+
                       {/* Rating action when order completed */}
                       {isFinished && !alreadyRated && ratingOrderId !== o.id && (
                         <button
@@ -390,14 +422,14 @@ export const CustomerDashboard: React.FC = () => {
                     <div className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-4 mt-1 flex flex-col gap-3 animate-in slide-in-from-top-1">
                       <div className="flex items-center justify-between border-b border-amber-200 pb-1.5">
                         <span className="text-xs font-bold text-slate-800">Đánh giá 2 chiều (Chỉ có tại BK Ship)</span>
-                        <button 
+                        <button
                           onClick={() => setRatingOrderId(null)}
                           className="text-[10px] font-bold text-slate-500 hover:text-slate-850"
                         >
                           Đóng
                         </button>
                       </div>
-                      
+
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-slate-700 mr-2 font-medium">Chọn mức độ hài lòng:</span>
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -456,11 +488,10 @@ export const CustomerDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setOrderType('do_an')}
-                className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${
-                  orderType === 'do_an' 
-                    ? 'border-red-600 bg-red-50 text-red-800 font-extrabold shadow-[0_8px_25px_rgba(220,38,38,0.15)] scale-[1.02]' 
-                    : 'border-amber-300 bg-white text-slate-700 hover:border-amber-450 hover:bg-amber-50/50 hover:shadow-sm'
-                }`}
+                className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${orderType === 'do_an'
+                  ? 'border-red-600 bg-red-50 text-red-800 font-extrabold shadow-[0_8px_25px_rgba(220,38,38,0.15)] scale-[1.02]'
+                  : 'border-amber-300 bg-white text-slate-700 hover:border-amber-450 hover:bg-amber-50/50 hover:shadow-sm'
+                  }`}
               >
                 <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'do_an' ? 'bg-red-100 shadow-inner' : 'bg-slate-100 group-hover:bg-red-100/50'}`}>
                   <Pizza className={`w-6 h-6 transition-transform duration-300 ${orderType === 'do_an' ? 'text-red-650 scale-110' : 'text-slate-500 group-hover:text-red-500'}`} />
@@ -471,11 +502,10 @@ export const CustomerDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setOrderType('do_uong')}
-                className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${
-                  orderType === 'do_uong' 
-                    ? 'border-amber-500 bg-amber-100 text-amber-950 font-extrabold shadow-[0_8px_25px_rgba(245,158,11,0.15)] scale-[1.02]' 
-                    : 'border-amber-300 bg-white text-slate-700 hover:border-amber-450 hover:bg-amber-50/50 hover:shadow-sm'
-                }`}
+                className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${orderType === 'do_uong'
+                  ? 'border-amber-500 bg-amber-100 text-amber-950 font-extrabold shadow-[0_8px_25px_rgba(245,158,11,0.15)] scale-[1.02]'
+                  : 'border-amber-300 bg-white text-slate-700 hover:border-amber-450 hover:bg-amber-50/50 hover:shadow-sm'
+                  }`}
               >
                 <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'do_uong' ? 'bg-amber-200 shadow-inner' : 'bg-slate-100 group-hover:bg-amber-100/55'}`}>
                   <Coffee className={`w-6 h-6 transition-transform duration-300 ${orderType === 'do_uong' ? 'text-amber-650 scale-110' : 'text-slate-500 group-hover:text-amber-600'}`} />
@@ -486,11 +516,10 @@ export const CustomerDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setOrderType('in_an')}
-                className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${
-                  orderType === 'in_an' 
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-900 font-extrabold shadow-[0_8px_25px_rgba(99,102,241,0.15)] scale-[1.02]' 
-                    : 'border-amber-300 bg-white text-slate-700 hover:border-indigo-400 hover:bg-indigo-50/20 hover:shadow-sm'
-                }`}
+                className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${orderType === 'in_an'
+                  ? 'border-indigo-500 bg-indigo-50 text-indigo-900 font-extrabold shadow-[0_8px_25px_rgba(99,102,241,0.15)] scale-[1.02]'
+                  : 'border-amber-300 bg-white text-slate-700 hover:border-indigo-400 hover:bg-indigo-50/20 hover:shadow-sm'
+                  }`}
               >
                 <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'in_an' ? 'bg-indigo-100 shadow-inner' : 'bg-slate-100 group-hover:bg-indigo-100/55'}`}>
                   <FileText className={`w-6 h-6 transition-transform duration-300 ${orderType === 'in_an' ? 'text-indigo-600 scale-110' : 'text-slate-500 group-hover:text-indigo-500'}`} />
@@ -503,7 +532,7 @@ export const CustomerDashboard: React.FC = () => {
           {/* Form fields */}
           <div className="flex flex-col gap-4">
             <label className="text-xs font-black text-amber-900 uppercase tracking-wider">2. Thông tin chi tiết đơn</label>
-            
+
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-slate-800">Tên món hoặc Tên tài liệu cần in *</label>
               <input
@@ -628,7 +657,7 @@ export const CustomerDashboard: React.FC = () => {
                 <div className="bg-white rounded-xl p-3 border-2 border-indigo-400 flex items-center justify-between shadow-inner">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-slate-700 uppercase">Tạm tính phí in</span>
-                    <span className="text-[9px] text-slate-500">Mock: 10 trang x {isColor ? '2.000đ' : '500đ'}/trang</span>
+                    <span className="text-[9px] text-slate-500">10 trang x {isColor ? '2.000đ' : '500đ'}/trang</span>
                   </div>
                   <span className="text-sm font-black text-indigo-700">
                     {(copies * 10 * (isColor ? 2000 : 500)).toLocaleString('vi-VN')} đ
@@ -641,22 +670,27 @@ export const CustomerDashboard: React.FC = () => {
               <label className="text-[11px] font-bold text-slate-800">Chọn Tòa nhà / Địa điểm giao hàng *</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'taquangbuu', label: 'Tạ Quang Bửu 📚' },
+                  { id: 'taquangbuu', label: 'Thư viện Tạ Quang Bửu 📚' },
                   { id: 'parabol', label: 'Cổng Parabol 📍' },
-                  { id: 'd3', label: 'Nhà D3 (Canteen) 🏢' },
+                  { id: 'b1', label: 'Toà B1 🏢' },
+                  { id: 'd5', label: 'Toà D5 🏢' },
+                  { id: 'd3', label: 'Toà D3 🏢' },
+                  { id: 'd7', label: 'Toà D7 🏢' },
+                  { id: 'd4', label: 'Toà D4 🏢' },
+                  { id: 'd6', label: 'Toà D6 🏢' },
+                  { id: 'c1', label: 'Toà C1 🏢' },
                   { id: 'b10', label: 'KTX B10 🏠' },
-                  { id: 'd8', label: 'Nhà D8 (In ấn) 🖨️' },
+                  { id: 'd8', label: 'Toà D8🏢' },
                   { id: 'other', label: 'Địa điểm khác ✏️' }
                 ].map((building) => (
                   <button
                     key={building.id}
                     type="button"
                     onClick={() => setSelectedBuilding(building.id)}
-                    className={`py-2 px-3 rounded-xl border text-center text-xs font-bold transition-all duration-200 ${
-                      selectedBuilding === building.id
-                        ? 'border-amber-500 bg-amber-100 text-amber-950 font-black shadow-sm'
-                        : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
-                    }`}
+                    className={`py-2 px-3 rounded-xl border text-center text-xs font-bold transition-all duration-200 ${selectedBuilding === building.id
+                      ? 'border-amber-500 bg-amber-100 text-amber-950 font-black shadow-sm'
+                      : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
+                      }`}
                   >
                     {building.label}
                   </button>
@@ -756,7 +790,7 @@ export const CustomerDashboard: React.FC = () => {
                   </label>
                   <span className="text-[10px] text-slate-700 font-bold">Shipper ứng trước mua hộ</span>
                 </div>
-                
+
                 <div className="relative">
                   <span className="absolute left-3 top-3 text-xs font-bold text-slate-500">đ</span>
                   <input
@@ -778,11 +812,10 @@ export const CustomerDashboard: React.FC = () => {
                       key={preset}
                       type="button"
                       onClick={() => setItemCost(preset)}
-                      className={`flex-1 py-2 px-1 text-[10px] font-bold rounded-lg border-2 transition-all duration-200 ${
-                        itemCost === preset
-                          ? 'bg-amber-500 border-transparent text-white shadow-sm'
-                          : 'bg-white border-amber-450 text-slate-700 hover:border-amber-500'
-                      }`}
+                      className={`flex-1 py-2 px-1 text-[10px] font-bold rounded-lg border-2 transition-all duration-200 ${itemCost === preset
+                        ? 'bg-amber-500 border-transparent text-white shadow-sm'
+                        : 'bg-white border-amber-450 text-slate-700 hover:border-amber-500'
+                        }`}
                     >
                       {preset.toLocaleString('vi-VN')} đ
                     </button>
@@ -828,22 +861,20 @@ export const CustomerDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('tien_mat')}
-                  className={`py-3 px-4 rounded-xl border-2 text-center text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-                    paymentMethod === 'tien_mat'
-                      ? 'border-emerald-500 bg-emerald-100 text-emerald-950 font-black shadow-[0_4px_15px_rgba(16,185,129,0.15)]'
-                      : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
-                  }`}
+                  className={`py-3 px-4 rounded-xl border-2 text-center text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${paymentMethod === 'tien_mat'
+                    ? 'border-emerald-500 bg-emerald-100 text-emerald-950 font-black shadow-[0_4px_15px_rgba(16,185,129,0.15)]'
+                    : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
+                    }`}
                 >
                   💵 Tiền mặt (COD)
                 </button>
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('chuyen_khoan')}
-                  className={`py-3 px-4 rounded-xl border-2 text-center text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-                    paymentMethod === 'chuyen_khoan'
-                      ? 'border-blue-500 bg-blue-100 text-blue-950 font-black shadow-[0_4px_15px_rgba(59,130,246,0.15)]'
-                      : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
-                  }`}
+                  className={`py-3 px-4 rounded-xl border-2 text-center text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${paymentMethod === 'chuyen_khoan'
+                    ? 'border-blue-500 bg-blue-100 text-blue-950 font-black shadow-[0_4px_15px_rgba(59,130,246,0.15)]'
+                    : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
+                    }`}
                 >
                   💳 Chuyển khoản
                 </button>
@@ -854,7 +885,7 @@ export const CustomerDashboard: React.FC = () => {
           {/* Tóm tắt thanh toán */}
           <div className="bg-white text-slate-900 rounded-[2rem] p-5 flex flex-col gap-3.5 border-2 border-amber-400 shadow-md relative overflow-hidden">
             <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-            
+
             <div className="flex justify-between items-center border-b border-amber-200 pb-2">
               <span className="text-[10px] font-bold tracking-wider text-slate-600 uppercase">Hình thức thanh toán</span>
               {paymentMethod === 'tien_mat' ? (
@@ -895,20 +926,20 @@ export const CustomerDashboard: React.FC = () => {
                   {appliedPromo && (
                     <span className="text-[10px] text-slate-500 line-through mb-0.5">
                       {((orderType === 'in_an'
-                         ? (copies * 10 * (isColor ? 2000 : 500))
-                         : Number(itemCost)) + Number(shippingFee)).toLocaleString('vi-VN')} đ
+                        ? (copies * 10 * (isColor ? 2000 : 500))
+                        : Number(itemCost)) + Number(shippingFee)).toLocaleString('vi-VN')} đ
                     </span>
                   )}
                   <span className="text-base font-black text-red-650">
-                      {Math.max(0, currentPricing.totalAmount - (appliedPromo?.discount || 0)).toLocaleString('vi-VN')} đ
+                    {Math.max(0, currentPricing.totalAmount - (appliedPromo?.discount || 0)).toLocaleString('vi-VN')} đ
                   </span>
                 </div>
               </div>
             </div>
-            
+
             <div className="text-[9px] text-slate-700 leading-normal flex items-start gap-1 bg-amber-50/50 p-3 rounded-xl border border-amber-300">
               💡 <span>
-                {paymentMethod === 'tien_mat' 
+                {paymentMethod === 'tien_mat'
                   ? 'Bạn không bị trừ số dư trước. Hãy chuẩn bị sẵn tiền mặt và trả cho Shipper khi giao hàng thành công. Shipper sẽ tự ứng trước tiền tại quán.'
                   : 'Bạn vui lòng chuyển khoản cho Shipper sau khi nhận được hàng thành công. Shipper sẽ tự ứng trước tiền mua hàng.'
                 }
@@ -927,15 +958,15 @@ export const CustomerDashboard: React.FC = () => {
 
       {/* Overlays */}
       {selectedMapOrder && (
-        <CampusMap 
-          order={selectedMapOrder} 
-          onClose={() => setSelectedMapOrder(null)} 
+        <CampusMap
+          order={selectedMapOrder}
+          onClose={() => setSelectedMapOrder(null)}
         />
       )}
       {selectedChatOrder && (
-        <ChatBox 
-          order={selectedChatOrder} 
-          onClose={() => setSelectedChatOrder(null)} 
+        <ChatBox
+          order={selectedChatOrder}
+          onClose={() => setSelectedChatOrder(null)}
         />
       )}
     </div>

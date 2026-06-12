@@ -5,29 +5,30 @@ import { useApp, Order, calculateOrderPricing } from '@/context/AppContext';
 import { CampusMap } from './CampusMap';
 import { ChatBox } from './ChatBox';
 import { OrderStatusTimeline } from './OrderStatusTimeline';
-import { 
-  Navigation, 
-  CheckCircle, 
-  XCircle, 
-  MapPin, 
-  FileText, 
-  Phone, 
-  Layers, 
+import {
+  Navigation,
+  CheckCircle,
+  XCircle,
+  MapPin,
+  FileText,
+  Phone,
+  Layers,
   ChevronRight,
   TrendingUp,
   MessageSquare,
   Trophy,
   Target,
-  Award
+  Award,
+  History
 } from 'lucide-react';
 import { CampusWalletCard } from './CampusWalletCard';
 
 export const ShipperDashboard: React.FC = () => {
   const { orders, user, acceptOrder, updateOrderStatus } = useApp();
-  const [shipperTab, setShipperTab] = useState<'pool' | 'active' | 'leaderboard'>('pool');
+  const [shipperTab, setShipperTab] = useState<'pool' | 'active' | 'leaderboard' | 'history'>('pool');
   const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
   const [actualCostInput, setActualCostInput] = useState<string>('');
-  
+
   // Overlays state
   const [selectedMapOrder, setSelectedMapOrder] = useState<Order | null>(null);
   const [selectedChatOrder, setSelectedChatOrder] = useState<Order | null>(null);
@@ -36,9 +37,14 @@ export const ShipperDashboard: React.FC = () => {
 
   // Filter orders
   const pendingOrders = orders.filter(o => o.status === 'cho_nhan');
-  const myActiveOrders = orders.filter(o => 
-    o.shipper_id === user.id && 
+  const myActiveOrders = orders.filter(o =>
+    o.shipper_id === user.id &&
     (o.status === 'da_nhan' || o.status === 'dang_giao')
+  );
+
+  const myHistoryOrders = orders.filter(o =>
+    o.shipper_id === user.id &&
+    (o.status === 'hoan_thanh' || o.status === 'da_huy')
   );
 
   const totalCompleted = user.orders_completed;
@@ -69,13 +75,13 @@ export const ShipperDashboard: React.FC = () => {
         {/* Subtle decorative mesh background */}
         <div className="absolute right-0 bottom-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute left-0 top-0 w-48 h-48 bg-blue-500/10 rounded-full blur-[60px] pointer-events-none" />
-        
+
         <div className="flex justify-between items-start relative z-10">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img 
-                src={user.avatar_url} 
-                alt={user.full_name} 
+              <img
+                src={user.avatar_url}
+                alt={user.full_name}
                 className="w-14 h-14 rounded-full object-cover border-2 border-emerald-400 bg-slate-800 p-0.5 shadow-[0_0_15px_rgba(52,211,153,0.3)]"
               />
               <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1 border-2 border-slate-900">
@@ -92,10 +98,10 @@ export const ShipperDashboard: React.FC = () => {
                   </span>
                 )}
               </h3>
-              <p className="text-[11px] text-emerald-400/80 font-bold mt-0.5 uppercase tracking-wider">Khối Vận chuyển Nội khu ĐHBK</p>
+              <p className="text-[11px] text-emerald-400/80 font-bold mt-0.5 uppercase tracking-wider">Giao hàng quanh khu vực ĐHBK</p>
             </div>
           </div>
-          
+
           <div className="text-right">
             <span className="text-[10px] font-bold text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl shadow-inner backdrop-blur-md flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -113,12 +119,12 @@ export const ShipperDashboard: React.FC = () => {
               <TrendingUp className="w-4 h-4 text-emerald-500" />
             </span>
           </div>
-          
+
           <div className="bg-white/5 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-center flex flex-col justify-center hover:bg-white/10 transition-colors">
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Đơn hoàn thành</span>
             <span className="text-xl font-black text-slate-100 mt-1">{totalCompleted}</span>
           </div>
-          
+
           <div className="bg-white/5 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-center flex flex-col justify-center hover:bg-white/10 transition-colors">
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Danh hiệu</span>
             <span className="text-xs font-black text-amber-400 mt-1 truncate">
@@ -134,8 +140,8 @@ export const ShipperDashboard: React.FC = () => {
             <span className="text-emerald-400">{repScore} / 200 Điểm</span>
           </div>
           <div className="h-2.5 w-full bg-slate-800/80 rounded-full overflow-hidden border border-white/10 shadow-inner">
-            <div 
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full transition-all duration-1000 ease-out relative" 
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full transition-all duration-1000 ease-out relative"
               style={{ width: `${Math.min(100, (repScore / 200) * 100)}%` }}
             >
               <div className="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]" />
@@ -148,36 +154,43 @@ export const ShipperDashboard: React.FC = () => {
       <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-amber-300 gap-1">
         <button
           onClick={() => setShipperTab('pool')}
-          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-            shipperTab === 'pool' 
-              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold' 
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${shipperTab === 'pool'
+              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-          }`}
+            }`}
         >
           <Layers className="w-4 h-4" />
           Bảng tin đơn hàng ({pendingOrders.length})
         </button>
         <button
           onClick={() => setShipperTab('active')}
-          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-            shipperTab === 'active' 
-              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold' 
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${shipperTab === 'active'
+              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-          }`}
+            }`}
         >
           <Navigation className="w-4 h-4" />
           Đơn tôi đang nhận ({myActiveOrders.length})
         </button>
         <button
           onClick={() => setShipperTab('leaderboard')}
-          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
-            shipperTab === 'leaderboard' 
-              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold' 
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${shipperTab === 'leaderboard'
+              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-          }`}
+            }`}
         >
           <Trophy className="w-4 h-4" />
           Thành tích
+        </button>
+        <button
+          onClick={() => setShipperTab('history')}
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${shipperTab === 'history'
+              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+        >
+          <History className="w-4 h-4" />
+          Lịch sử ({myHistoryOrders.length})
         </button>
       </div>
 
@@ -195,7 +208,7 @@ export const ShipperDashboard: React.FC = () => {
                 Tổng: 1.450.000đ
               </span>
             </div>
-            
+
             <div className="w-full h-40 mt-2 relative">
               <svg viewBox="0 0 400 120" className="w-full h-full overflow-visible">
                 <defs>
@@ -209,26 +222,26 @@ export const ShipperDashboard: React.FC = () => {
                 <line x1="0" y1="40" x2="400" y2="40" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
                 <line x1="0" y1="80" x2="400" y2="80" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
                 <line x1="0" y1="120" x2="400" y2="120" stroke="#f1f5f9" strokeWidth="1" />
-                
+
                 {/* Area */}
-                <path 
-                  d="M0,120 L0,90 C50,90 80,40 120,60 C160,80 200,20 240,40 C280,60 320,10 360,30 L400,20 L400,120 Z" 
-                  fill="url(#chartGradient)" 
+                <path
+                  d="M0,120 L0,90 C50,90 80,40 120,60 C160,80 200,20 240,40 C280,60 320,10 360,30 L400,20 L400,120 Z"
+                  fill="url(#chartGradient)"
                   className="animate-[fadeIn_1s_ease-out]"
                 />
-                
+
                 {/* Line */}
-                <path 
-                  d="M0,90 C50,90 80,40 120,60 C160,80 200,20 240,40 C280,60 320,10 360,30 L400,20" 
-                  fill="none" 
-                  stroke="#3b82f6" 
+                <path
+                  d="M0,90 C50,90 80,40 120,60 C160,80 200,20 240,40 C280,60 320,10 360,30 L400,20"
+                  fill="none"
+                  stroke="#3b82f6"
                   strokeWidth="3"
                   strokeLinecap="round"
                   className="animate-[drawPath_1.5s_ease-out]"
                   strokeDasharray="1000"
                   strokeDashoffset="0"
                 />
-                
+
                 {/* Points */}
                 {[
                   { cx: 0, cy: 90, val: '80k' },
@@ -262,12 +275,12 @@ export const ShipperDashboard: React.FC = () => {
           <div className="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-[2rem] p-6 shadow-xl border-2 border-amber-400 flex flex-col gap-5 text-slate-900 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 blur-[60px] pointer-events-none rounded-full" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 blur-[50px] pointer-events-none rounded-full" />
-            
+
             <h2 className="text-base font-black text-yellow-950 flex items-center gap-2 relative z-10">
               <Trophy className="w-6 h-6" />
               Bảng Xếp Hạng Tuần (Top HUST)
             </h2>
-            
+
             <div className="flex flex-col gap-3 relative z-10">
               {[
                 { rank: 1, name: 'Nguyễn Văn Đạt', orders: 154 },
@@ -278,9 +291,8 @@ export const ShipperDashboard: React.FC = () => {
               ].map((shipper) => (
                 <div
                   key={shipper.rank}
-                  className={`flex items-center justify-between p-3.5 rounded-2xl border leaderboard-row ${
-                    shipper.rank === 1 ? 'leader-top-1' : shipper.rank === 2 ? 'leader-top-2' : shipper.rank === 3 ? 'leader-top-3' : 'bg-white/5 border-white/6'
-                  }`}
+                  className={`flex items-center justify-between p-3.5 rounded-2xl border leaderboard-row ${shipper.rank === 1 ? 'leader-top-1' : shipper.rank === 2 ? 'leader-top-2' : shipper.rank === 3 ? 'leader-top-3' : 'bg-white/5 border-white/6'
+                    }`}
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
@@ -353,15 +365,15 @@ export const ShipperDashboard: React.FC = () => {
             </div>
           ) : (
             pendingOrders.map((o) => (
-              <div 
+              <div
                 key={o.id}
                 className="bg-white border border-amber-300 rounded-3xl p-5 shadow-sm hover:border-amber-400 hover:shadow-md transition-all duration-200 flex flex-col gap-4"
               >
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex gap-3">
-                    <img 
-                      src={o.customer_avatar} 
-                      alt={o.customer_name} 
+                    <img
+                      src={o.customer_avatar}
+                      alt={o.customer_name}
                       className="w-10 h-10 rounded-full border border-amber-200"
                     />
                     <div>
@@ -381,11 +393,10 @@ export const ShipperDashboard: React.FC = () => {
                 {/* Hình thức thanh toán */}
                 <div className="flex justify-between items-center bg-amber-50/40 p-2.5 rounded-2xl border border-amber-200 text-xs">
                   <span className="text-[11px] font-bold text-slate-600">Hình thức thanh toán:</span>
-                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
-                    o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản')
+                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản')
                       ? 'bg-blue-50 text-blue-700 border-blue-200'
                       : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  }`}>
+                    }`}>
                     {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? '💳 Chuyển khoản' : '💵 Tiền mặt (COD)'}
                   </span>
                 </div>
@@ -481,17 +492,16 @@ export const ShipperDashboard: React.FC = () => {
                 o.printing_details
               ).estimatedItemCost;
               return (
-                <div 
+                <div
                   key={o.id}
                   className="bg-white border border-amber-300 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col gap-4"
                 >
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex gap-2.5">
-                      <span className={`text-xs font-bold py-1 px-2.5 rounded-lg ${
-                        o.status === 'da_nhan' 
-                          ? 'bg-blue-50 text-blue-700 border border-blue-100' 
+                      <span className={`text-xs font-bold py-1 px-2.5 rounded-lg ${o.status === 'da_nhan'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-100'
                           : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                      }`}>
+                        }`}>
                         {o.status === 'da_nhan' ? 'Đã nhận đơn' : 'Đang giao hàng'}
                       </span>
                       <h4 className="font-bold text-slate-800 text-sm self-center">{o.title}</h4>
@@ -517,11 +527,10 @@ export const ShipperDashboard: React.FC = () => {
                   {/* Hình thức thanh toán */}
                   <div className="flex justify-between items-center bg-amber-50/40 p-2.5 rounded-2xl border border-amber-200 text-xs">
                     <span className="text-[11px] font-bold text-slate-500">Hình thức thanh toán:</span>
-                    <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
-                      o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản')
+                    <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản')
                         ? 'bg-blue-50 text-blue-700 border-blue-200'
                         : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    }`}>
+                      }`}>
                       {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? '💳 Chuyển khoản' : '💵 Tiền mặt (COD)'}
                     </span>
                   </div>
@@ -610,11 +619,10 @@ export const ShipperDashboard: React.FC = () => {
                             setActualCostInput(String(itemCost));
                           }
                         }}
-                        className={`flex-1 py-3 px-4 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all duration-200 shadow-md ${
-                          o.status === 'da_nhan' 
-                            ? 'bg-blue-600 hover:bg-blue-700' 
+                        className={`flex-1 py-3 px-4 rounded-xl text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all duration-200 shadow-md ${o.status === 'da_nhan'
+                            ? 'bg-blue-600 hover:bg-blue-700'
                             : 'bg-emerald-500 hover:bg-emerald-600'
-                        }`}
+                          }`}
                       >
                         <CheckCircle className="w-4 h-4" />
                         {o.status === 'da_nhan' ? 'Bắt đầu đi giao' : 'Đã giao hàng thành công'}
@@ -626,10 +634,10 @@ export const ShipperDashboard: React.FC = () => {
                   {confirmOrderId === o.id && (
                     <div className="bg-amber-50 text-slate-900 rounded-2xl p-5 border-2 border-amber-400 flex flex-col gap-4 animate-in slide-in-from-top-1 relative overflow-hidden">
                       <div className="absolute right-0 top-0 w-20 h-20 bg-emerald-550/10 rounded-full blur-2xl pointer-events-none" />
-                      
+
                       <div className="flex justify-between items-center border-b border-amber-350 pb-2">
                         <span className="text-xs font-black text-slate-800">Xác nhận hóa đơn thực tế</span>
-                        <button 
+                        <button
                           onClick={() => setConfirmOrderId(null)}
                           className="text-[10px] font-bold text-slate-500 hover:text-slate-800"
                         >
@@ -710,17 +718,68 @@ export const ShipperDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* 5. HISTORY TAB */}
+      {shipperTab === 'history' && (
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold text-slate-800">Lịch sử đơn hàng bạn đã nhận</h2>
+            <span className="text-xs text-slate-400">Các đơn đã hoàn thành hoặc bị hủy</span>
+          </div>
+
+          {myHistoryOrders.length === 0 ? (
+            <div className="bg-white border border-amber-200 rounded-3xl py-12 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-3">
+              <span className="text-4xl">📚</span>
+              <h3 className="font-bold text-slate-800 text-sm">Chưa có lịch sử đơn hàng nào</h3>
+              <p className="text-xs text-slate-500 max-w-xs">
+                Các đơn hàng bạn giao thành công hoặc đã hủy sẽ hiển thị ở đây.
+              </p>
+            </div>
+          ) : (
+            myHistoryOrders.map((o) => (
+              <div
+                key={o.id}
+                className="bg-white border border-amber-300 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col gap-4 opacity-80 hover:opacity-100"
+              >
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex gap-2.5">
+                    <span className={`text-xs font-bold py-1 px-2.5 rounded-lg ${o.status === 'hoan_thanh'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                      }`}>
+                      {o.status === 'hoan_thanh' ? 'Đã hoàn thành' : 'Đã hủy'}
+                    </span>
+                    <h4 className="font-bold text-slate-800 text-sm self-center">{o.title}</h4>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-800">
+                    {o.shipping_fee.toLocaleString('vi-VN')} đ
+                  </span>
+                </div>
+
+                <div className="bg-amber-50/40 rounded-2xl p-4 text-xs text-slate-650 flex flex-col gap-2.5 border border-amber-200">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-slate-450 flex-shrink-0" />
+                    <span><b>Vị trí giao:</b> {o.delivery_location}</span>
+                  </div>
+                </div>
+
+                <OrderStatusTimeline status={o.status} compact />
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
       {/* Overlays */}
       {selectedMapOrder && (
-        <CampusMap 
-          order={selectedMapOrder} 
-          onClose={() => setSelectedMapOrder(null)} 
+        <CampusMap
+          order={selectedMapOrder}
+          onClose={() => setSelectedMapOrder(null)}
         />
       )}
       {selectedChatOrder && (
-        <ChatBox 
-          order={selectedChatOrder} 
-          onClose={() => setSelectedChatOrder(null)} 
+        <ChatBox
+          order={selectedChatOrder}
+          onClose={() => setSelectedChatOrder(null)}
         />
       )}
     </div>

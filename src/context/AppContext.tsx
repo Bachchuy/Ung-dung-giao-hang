@@ -1343,12 +1343,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (error) throw error;
 
         if (nextStatus === 'hoan_thanh' && targetOrder.status !== 'hoan_thanh' && targetOrder.shipper_id) {
-          const customerProfile = users.find(u => u.id === targetOrder.customer_id);
-          const newCustBalance = Math.max(0, (customerProfile?.balance || 0) - finalTotalAmount);
-          await supabase
-            .from('profiles')
-            .update({ balance: newCustBalance })
-            .eq('id', targetOrder.customer_id);
+          const isChuyenKhoan = targetOrder.payment_method === 'chuyen_khoan' || targetOrder.notes?.includes('Thanh toán: Chuyển khoản');
+          
+          if (isChuyenKhoan) {
+            const customerProfile = users.find(u => u.id === targetOrder.customer_id);
+            const newCustBalance = Math.max(0, (customerProfile?.balance || 0) - finalTotalAmount);
+            await supabase
+              .from('profiles')
+              .update({ balance: newCustBalance })
+              .eq('id', targetOrder.customer_id);
+          }
 
           const shipperProfile = users.find(u => u.id === targetOrder.shipper_id);
           const newShipBalance = (shipperProfile?.balance || 0) + targetOrder.shipping_fee;
@@ -1422,11 +1426,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let updatedUsers = [...users];
 
       if (nextStatus === 'hoan_thanh' && targetOrder.status !== 'hoan_thanh' && targetOrder.shipper_id) {
+        const isChuyenKhoan = targetOrder.payment_method === 'chuyen_khoan' || targetOrder.notes?.includes('Thanh toán: Chuyển khoản');
+        
         updatedUsers = users.map(u => {
           if (u.id === targetOrder.customer_id) {
             return {
               ...u,
-              balance: Math.max(0, (u.balance || 0) - finalTotalAmount)
+              balance: isChuyenKhoan ? Math.max(0, (u.balance || 0) - finalTotalAmount) : (u.balance || 0)
             };
           }
           if (u.id === targetOrder.shipper_id) {
