@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { AuthScreen } from '@/components/AuthScreen';
 import { CustomerDashboard } from '@/components/CustomerDashboard';
@@ -11,10 +11,12 @@ import { RoleSelector } from '@/components/RoleSelector';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { Truck, LogOut, Info, ShieldCheck } from 'lucide-react';
 import { isAdminAccount, getAdminAccessDeniedReason } from '@/lib/accessControl';
+import { UserProfileModal } from '@/components/UserProfileModal';
 
 export default function Home() {
   const { user, logout, isDemoMode } = useApp();
   const hasAdminAccess = isAdminAccount(user);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // If no student session is active, show the auth/landing page
   if (!user) {
@@ -74,7 +76,10 @@ export default function Home() {
             <div className="h-8 w-px bg-zinc-800/60"></div>
 
             {/* Profile */}
-            <div className="flex items-center gap-3 hover:bg-zinc-900/40 p-1.5 pr-3 rounded-full transition-colors cursor-pointer border border-transparent hover:border-zinc-800/80">
+            <div 
+              onClick={() => setIsProfileModalOpen(true)}
+              className="flex items-center gap-3 hover:bg-zinc-900/40 p-1.5 pr-3 rounded-full transition-colors cursor-pointer border border-transparent hover:border-zinc-800/80"
+            >
               <div className="relative">
                 <img 
                   src={user.avatar_url} 
@@ -114,6 +119,11 @@ export default function Home() {
 
       {/* 4. STICKY FLOATING CONTROL PILL */}
       <RoleSelector />
+
+      <UserProfileModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </div>
   );
 }

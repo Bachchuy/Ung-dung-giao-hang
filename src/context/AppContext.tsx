@@ -127,6 +127,7 @@ interface AppContextType {
   chats: ChatMessage[];
   sendChatMessage: (orderId: string, message: string) => Promise<boolean>;
   updateUserAvatar: (file: File) => Promise<boolean>;
+  updateUserProfile: (full_name: string) => Promise<boolean>;
 }
 
 export const STORAGE_KEYS = {
@@ -885,6 +886,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addNotification('Lỗi lưu ảnh', 'Không thể lưu ảnh cục bộ.', 'warning');
       return false;
     }
+  };
+
+  const updateUserProfile = async (full_name: string) => {
+    if (!user) return false;
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error: updateError } = await supabase.from('profiles').update({ full_name }).eq('id', user.id);
+        if (updateError) throw updateError;
+
+        const updatedUser = { ...user, full_name };
+        setUser(updatedUser);
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(updatedUser));
+
+        addNotification('Cập nhật thành công', 'Thông tin của bạn đã được lưu.', 'success');
+        await recordActivity({ action: 'update_profile', entityType: 'profile', entityId: user.id, actor: user });
+        fetchFromSupabase();
+        return true;
+      } catch (err) {
+        console.error('Error updating profile:', err);
+        addNotification('Lỗi', 'Không thể cập nhật thông tin. Vui lòng thử lại.', 'warning');
+        return false;
+      }
+    }
+
+    // Demo/local mode
+    const updatedUser = { ...user, full_name };
+    setUser(updatedUser);
+    const updatedUsers = users.map(u => u.id === user.id ? updatedUser : u);
+    saveState(updatedUsers, orders, ratings);
+    addNotification('Cập nhật thành công', 'Thông tin đã được lưu cục bộ.', 'success');
+    await recordActivity({ action: 'update_profile', entityType: 'profile', entityId: user.id, actor: user });
+    return true;
   };
 
   // --- ACTIONS ---
@@ -1688,7 +1722,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearNotification,
       addNotification,
       deposit,
-      	updateUserAvatar,
+      updateUserAvatar,
+      updateUserProfile,
       chats,
       sendChatMessage
     }}>

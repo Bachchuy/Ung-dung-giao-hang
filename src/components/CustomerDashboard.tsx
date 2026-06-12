@@ -303,7 +303,7 @@ export const CustomerDashboard: React.FC = () => {
             (activeTab === 'track' ? myOrders.filter(o => o.status !== 'hoan_thanh' && o.status !== 'da_huy') : myOrders.filter(o => o.status === 'hoan_thanh' || o.status === 'da_huy')).map((o) => {
               const hasShipper = !!o.shipper_id;
               const isFinished = o.status === 'hoan_thanh';
-              const alreadyRated = ratings.some(r => r.order_id === o.id && r.from_id === 'user-cust-1');
+              const alreadyRated = ratings.some(r => r.order_id === o.id && r.from_id === user.id);
 
               return (
                 <div

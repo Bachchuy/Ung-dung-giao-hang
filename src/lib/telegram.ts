@@ -1,2 +1,0 @@
-// Telegram integration removed
-export {};
