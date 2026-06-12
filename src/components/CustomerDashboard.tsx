@@ -303,7 +303,7 @@ export const CustomerDashboard: React.FC = () => {
             (activeTab === 'track' ? myOrders.filter(o => o.status !== 'hoan_thanh' && o.status !== 'da_huy') : myOrders.filter(o => o.status === 'hoan_thanh' || o.status === 'da_huy')).map((o) => {
               const hasShipper = !!o.shipper_id;
               const isFinished = o.status === 'hoan_thanh';
-              const alreadyRated = ratings.some(r => r.order_id === o.id && r.from_id === user.id);
+              const userRating = ratings.find(r => r.order_id === o.id && r.from_id === user?.id);
 
               return (
                 <div
@@ -411,24 +411,24 @@ export const CustomerDashboard: React.FC = () => {
                         />
                         <div>
                           <p className="text-xs font-bold text-slate-800 leading-tight">{o.shipper_name}</p>
-                          <p className="text-[10px] text-amber-600 font-semibold mt-0.5 flex items-center gap-1">🚴 Shipper nội khu trường</p>
+                          <p className="text-[10px] text-amber-600 font-semibold mt-0.5 flex items-center gap-1">🚴 Chim anh vũ</p>
                         </div>
                       </div>
 
                       {/* Rating action when order completed */}
-                      {isFinished && !alreadyRated && ratingOrderId !== o.id && (
+                      {isFinished && !userRating && ratingOrderId !== o.id && (
                         <button
                           onClick={() => setRatingOrderId(o.id)}
                           className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors duration-200"
                         >
                           <Star className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />
-                          Đánh giá Shipper
+                          Đánh giá người giao hàng
                         </button>
                       )}
 
-                      {isFinished && alreadyRated && (
+                      {isFinished && userRating && (
                         <span className="text-[10px] text-emerald-800 font-semibold flex items-center gap-1 bg-emerald-50 py-1 px-2.5 rounded-lg border border-emerald-250">
-                          <Check className="w-3 h-3 text-emerald-600" /> Đã đánh giá 5★
+                          <Check className="w-3 h-3 text-emerald-600" /> Đã đánh giá {userRating.rating}★
                         </span>
                       )}
                     </div>
@@ -465,7 +465,7 @@ export const CustomerDashboard: React.FC = () => {
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-slate-650 uppercase tracking-wider">Viết bình luận cho Shipper</label>
+                        <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Viết bình luận cho Shipper</label>
                         <div className="relative">
                           <MessageSquare className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
                           <input
@@ -481,7 +481,7 @@ export const CustomerDashboard: React.FC = () => {
 
                       <button
                         onClick={() => handleRatingSubmit(o.id, o.shipper_id!)}
-                        className="w-full bg-gradient-to-r from-red-650 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md"
+                        className="w-full bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md"
                       >
                         Gửi đánh giá & Cộng điểm uy tín
                       </button>
