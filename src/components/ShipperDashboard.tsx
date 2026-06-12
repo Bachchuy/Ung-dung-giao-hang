@@ -145,12 +145,12 @@ export const ShipperDashboard: React.FC = () => {
       </div>
 
       {/* 2. TABS SELECTOR */}
-      <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-slate-100 gap-1">
+      <div className="flex bg-white p-1 rounded-2xl shadow-sm border border-amber-300 gap-1">
         <button
           onClick={() => setShipperTab('pool')}
           className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
             shipperTab === 'pool' 
-              ? 'bg-slate-900 text-white shadow-sm' 
+              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold' 
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -161,7 +161,7 @@ export const ShipperDashboard: React.FC = () => {
           onClick={() => setShipperTab('active')}
           className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
             shipperTab === 'active' 
-              ? 'bg-slate-900 text-white shadow-sm' 
+              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold' 
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -172,7 +172,7 @@ export const ShipperDashboard: React.FC = () => {
           onClick={() => setShipperTab('leaderboard')}
           className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
             shipperTab === 'leaderboard' 
-              ? 'bg-slate-900 text-white shadow-sm' 
+              ? 'bg-amber-500 text-amber-950 shadow-sm font-bold' 
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -185,13 +185,13 @@ export const ShipperDashboard: React.FC = () => {
       {shipperTab === 'leaderboard' && (
         <div className="flex flex-col gap-6">
           {/* SVG EARNINGS CHART (Mockup Dynamic Data) */}
-          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex flex-col gap-4">
+          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-amber-300 flex flex-col gap-4">
             <div className="flex justify-between items-center">
               <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-500" />
                 Thu nhập 7 ngày qua
               </h2>
-              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+              <span className="text-[10px] font-bold text-blue-800 bg-blue-50 px-2 py-1 rounded-lg">
                 Tổng: 1.450.000đ
               </span>
             </div>
@@ -259,11 +259,11 @@ export const ShipperDashboard: React.FC = () => {
           </div>
 
           {/* Leaderboard */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[2rem] p-6 shadow-2xl border border-slate-800 flex flex-col gap-5 text-white relative overflow-hidden backdrop-blur-md">
+          <div className="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-[2rem] p-6 shadow-xl border-2 border-amber-400 flex flex-col gap-5 text-slate-900 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 blur-[60px] pointer-events-none rounded-full" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 blur-[50px] pointer-events-none rounded-full" />
             
-            <h2 className="text-base font-black text-amber-400 flex items-center gap-2 relative z-10">
+            <h2 className="text-base font-black text-yellow-950 flex items-center gap-2 relative z-10">
               <Trophy className="w-6 h-6" />
               Bảng Xếp Hạng Tuần (Top HUST)
             </h2>
@@ -288,9 +288,9 @@ export const ShipperDashboard: React.FC = () => {
                         <span className="text-sm font-black text-slate-900">{shipper.rank <= 3 ? `#${shipper.rank}` : shipper.rank}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-100">{shipper.name}</span>
+                        <span className="text-sm font-bold text-slate-900">{shipper.name}</span>
                         {shipper.rank === 1 && (
-                          <span className="text-[9px] text-slate-900 font-black bg-gradient-to-r from-yellow-300 to-amber-500 px-2 py-0.5 rounded-md self-start mt-1 shadow-sm">
+                          <span className="text-[9px] text-white font-black bg-gradient-to-r from-red-600 to-amber-500 px-2 py-0.5 rounded-md self-start mt-1 shadow-sm">
                             HUYỀN THOẠI
                           </span>
                         )}
@@ -298,8 +298,8 @@ export const ShipperDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-base font-black text-emerald-400">{shipper.orders}</span>
-                    <span className="text-[10px] text-slate-400 font-medium">Đơn thành công</span>
+                    <span className="text-base font-black text-red-600">{shipper.orders}</span>
+                    <span className="text-[10px] text-slate-700 font-bold">Đơn thành công</span>
                   </div>
                 </div>
               ))}
@@ -307,7 +307,7 @@ export const ShipperDashboard: React.FC = () => {
           </div>
 
           {/* Daily Quests */}
-          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex flex-col gap-4">
+          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-amber-300 flex flex-col gap-4">
             <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
               <Target className="w-5 h-5 text-indigo-500" />
               Nhiệm vụ nhận thưởng
@@ -330,24 +330,6 @@ export const ShipperDashboard: React.FC = () => {
                   <span className="text-[10px] font-black text-indigo-600">1/2</span>
                 </div>
               </div>
-
-              <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-200 flex flex-col gap-3 relative overflow-hidden group hover:border-amber-200 transition-colors">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800 group-hover:text-amber-700 transition-colors">Cú đêm tốc độ 🌙</h3>
-                    <p className="text-xs text-slate-500 mt-1">Nhận và giao 1 đơn sau 22h</p>
-                  </div>
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-lg flex items-center gap-1 border border-amber-200">
-                    <Award className="w-3 h-3" /> Huy hiệu
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner">
-                    <div className="h-full bg-amber-500 rounded-full" style={{ width: '0%' }} />
-                  </div>
-                  <span className="text-[10px] font-black text-slate-400">0/1</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -362,10 +344,10 @@ export const ShipperDashboard: React.FC = () => {
           </div>
 
           {pendingOrders.length === 0 ? (
-            <div className="bg-white border border-slate-100 rounded-3xl py-12 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-3">
+            <div className="bg-white border border-amber-300 rounded-3xl py-12 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-3">
               <span className="text-4xl">🍿</span>
               <h3 className="font-bold text-slate-800 text-sm">Hiện tại chưa có đơn hàng mới</h3>
-              <p className="text-xs text-slate-500 max-w-xs">
+              <p className="text-xs text-slate-650 max-w-xs">
                 Khi sinh viên trong trường đặt đồ ăn hoặc in tài liệu học tập, các đơn hàng sẽ lập tức hiển thị realtime ở đây.
               </p>
             </div>
@@ -373,18 +355,18 @@ export const ShipperDashboard: React.FC = () => {
             pendingOrders.map((o) => (
               <div 
                 key={o.id}
-                className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-4"
+                className="bg-white border border-amber-300 rounded-3xl p-5 shadow-sm hover:border-amber-400 hover:shadow-md transition-all duration-200 flex flex-col gap-4"
               >
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex gap-3">
                     <img 
                       src={o.customer_avatar} 
                       alt={o.customer_name} 
-                      className="w-10 h-10 rounded-full border border-slate-100"
+                      className="w-10 h-10 rounded-full border border-amber-200"
                     />
                     <div>
                       <h4 className="font-bold text-slate-800 text-sm">{o.title}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">Đặt bởi: <b>{o.customer_name}</b></p>
+                      <p className="text-xs text-slate-600 mt-0.5">Đặt bởi: <b>{o.customer_name}</b></p>
                     </div>
                   </div>
                   <span className="bg-emerald-50 text-emerald-700 text-xs font-extrabold px-3 py-1 rounded-xl flex items-center gap-0.5 border border-emerald-100">
@@ -392,26 +374,40 @@ export const ShipperDashboard: React.FC = () => {
                   </span>
                 </div>
 
-                <p className="text-xs text-slate-600 pl-1 leading-relaxed">
+                <p className="text-xs text-slate-650 pl-1 leading-relaxed">
                   {o.description || 'Không có mô tả chi tiết.'}
                 </p>
 
+                {/* Hình thức thanh toán */}
+                <div className="flex justify-between items-center bg-amber-50/40 p-2.5 rounded-2xl border border-amber-200 text-xs">
+                  <span className="text-[11px] font-bold text-slate-600">Hình thức thanh toán:</span>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
+                    o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản')
+                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>
+                    {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? '💳 Chuyển khoản' : '💵 Tiền mặt (COD)'}
+                  </span>
+                </div>
+
                 {/* Hướng dẫn tiền mặt COD */}
-                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="bg-white rounded-xl p-2 border border-slate-100 flex flex-col gap-0.5 shadow-inner">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase">Ứng mua hộ</span>
+                <div className="bg-amber-50/50 rounded-2xl p-3 border border-amber-200 grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-white rounded-xl p-2 border border-amber-250 flex flex-col gap-0.5 shadow-inner">
+                    <span className="text-[9px] text-slate-500 font-bold uppercase">Ứng mua hộ</span>
                     <span className="font-extrabold text-red-500 text-xs">
                       {(o.item_cost || (o.total_amount ? o.total_amount - o.shipping_fee : 30000)).toLocaleString('vi-VN')}đ
                     </span>
                   </div>
-                  <div className="bg-white rounded-xl p-2 border border-slate-100 flex flex-col gap-0.5 shadow-inner">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase">Cần thu COD</span>
+                  <div className="bg-white rounded-xl p-2 border border-amber-250 flex flex-col gap-0.5 shadow-inner">
+                    <span className="text-[9px] text-slate-500 font-bold uppercase">
+                      {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? 'Thu chuyển khoản' : 'Cần thu COD'}
+                    </span>
                     <span className="font-extrabold text-emerald-600 text-xs">
                       {o.total_amount?.toLocaleString('vi-VN')}đ
                     </span>
                   </div>
-                  <div className="bg-white rounded-xl p-2 border border-slate-100 flex flex-col gap-0.5 shadow-inner">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase">Thu nhập ship</span>
+                  <div className="bg-white rounded-xl p-2 border border-amber-250 flex flex-col gap-0.5 shadow-inner">
+                    <span className="text-[9px] text-slate-500 font-bold uppercase">Thu nhập ship</span>
                     <span className="font-extrabold text-blue-600 text-xs">
                       {o.shipping_fee.toLocaleString('vi-VN')}đ
                     </span>
@@ -420,7 +416,7 @@ export const ShipperDashboard: React.FC = () => {
 
                 {/* Print Configuration highlight */}
                 {o.printing_details && (
-                  <div className="bg-violet-50/30 border border-violet-100 rounded-2xl p-3 flex flex-col gap-1.5 text-xs text-violet-900 pl-4 relative">
+                  <div className="bg-violet-50/30 border border-violet-105 rounded-2xl p-3 flex flex-col gap-1.5 text-xs text-violet-900 pl-4 relative">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-violet-500 rounded-l-2xl" />
                     <div className="flex items-center gap-1.5 font-bold mb-0.5 text-violet-800">
                       <FileText className="w-4 h-4 text-violet-600" />
@@ -435,13 +431,13 @@ export const ShipperDashboard: React.FC = () => {
                   </div>
                 )}
 
-                <div className="bg-slate-50 rounded-2xl p-3 text-xs text-slate-600 flex flex-col gap-1.5">
+                <div className="bg-amber-50/40 rounded-2xl p-3 border border-amber-200 text-xs text-slate-650 flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                     <span><b>Vị trí giao hàng:</b> {o.delivery_location}</span>
                   </div>
                   {o.notes && (
-                    <div className="text-[11px] text-slate-500 border-t border-slate-200/50 pt-1.5">
+                    <div className="text-[11px] text-slate-500 border-t border-amber-200 pt-1.5">
                       💡 <b>Lời nhắn:</b> {o.notes}
                     </div>
                   )}
@@ -469,7 +465,7 @@ export const ShipperDashboard: React.FC = () => {
           </div>
 
           {myActiveOrders.length === 0 ? (
-            <div className="bg-white border border-slate-100 rounded-3xl py-12 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-3">
+            <div className="bg-white border border-amber-200 rounded-3xl py-12 px-6 text-center shadow-sm flex flex-col items-center justify-center gap-3">
               <span className="text-4xl">🚲</span>
               <h3 className="font-bold text-slate-800 text-sm">Bạn chưa nhận giao đơn nào</h3>
               <p className="text-xs text-slate-500 max-w-xs">
@@ -487,7 +483,7 @@ export const ShipperDashboard: React.FC = () => {
               return (
                 <div 
                   key={o.id}
-                  className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col gap-4"
+                  className="bg-white border border-amber-300 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col gap-4"
                 >
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex gap-2.5">
@@ -518,21 +514,35 @@ export const ShipperDashboard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Hình thức thanh toán */}
+                  <div className="flex justify-between items-center bg-amber-50/40 p-2.5 rounded-2xl border border-amber-200 text-xs">
+                    <span className="text-[11px] font-bold text-slate-500">Hình thức thanh toán:</span>
+                    <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
+                      o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản')
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}>
+                      {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? '💳 Chuyển khoản' : '💵 Tiền mặt (COD)'}
+                    </span>
+                  </div>
+
                   {/* Hướng dẫn tiền mặt COD */}
-                  <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="bg-white rounded-xl p-2 border border-slate-100 flex flex-col gap-0.5 shadow-inner">
+                  <div className="bg-amber-50/50 rounded-2xl p-3 border border-amber-200 grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="bg-white rounded-xl p-2 border border-amber-250 flex flex-col gap-0.5 shadow-inner">
                       <span className="text-[9px] text-slate-400 font-bold uppercase">Ứng mua hộ</span>
                       <span className="font-extrabold text-red-500 text-xs">
                         {itemCost.toLocaleString('vi-VN')} đ
                       </span>
                     </div>
-                    <div className="bg-white rounded-xl p-2 border border-slate-100 flex flex-col gap-0.5 shadow-inner">
-                      <span className="text-[9px] text-slate-400 font-bold uppercase">Cần thu COD</span>
+                    <div className="bg-white rounded-xl p-2 border border-amber-250 flex flex-col gap-0.5 shadow-inner">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase">
+                        {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? 'Thu chuyển khoản' : 'Cần thu COD'}
+                      </span>
                       <span className="font-extrabold text-emerald-600 text-xs">
                         {(itemCost + o.shipping_fee).toLocaleString('vi-VN')} đ
                       </span>
                     </div>
-                    <div className="bg-white rounded-xl p-2 border border-slate-100 flex flex-col gap-0.5 shadow-inner">
+                    <div className="bg-white rounded-xl p-2 border border-amber-250 flex flex-col gap-0.5 shadow-inner">
                       <span className="text-[9px] text-slate-400 font-bold uppercase">Lợi nhuận ship</span>
                       <span className="font-extrabold text-blue-600 text-xs">
                         {o.shipping_fee.toLocaleString('vi-VN')} đ
@@ -540,17 +550,17 @@ export const ShipperDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 rounded-2xl p-4 text-xs text-slate-600 flex flex-col gap-2.5">
+                  <div className="bg-amber-50/40 rounded-2xl p-4 text-xs text-slate-650 flex flex-col gap-2.5 border border-amber-200">
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <MapPin className="w-4 h-4 text-slate-450 flex-shrink-0" />
                       <span><b>Vị trí giao:</b> {o.delivery_location}</span>
                     </div>
-                    <div className="flex items-center gap-2 border-t border-slate-200/50 pt-2">
-                      <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <div className="flex items-center gap-2 border-t border-amber-200 pt-2">
+                      <Phone className="w-4 h-4 text-slate-450 flex-shrink-0" />
                       <span><b>SĐT Khách hàng:</b> <a href={`tel:${o.phone_number}`} className="underline font-bold text-slate-800">{o.phone_number}</a> ({o.customer_name})</span>
                     </div>
                     {o.notes && (
-                      <div className="text-[11px] text-slate-500 border-t border-slate-200/50 pt-2">
+                      <div className="text-[11px] text-slate-500 border-t border-amber-200 pt-2">
                         💡 <b>Ghi chú:</b> {o.notes}
                       </div>
                     )}
@@ -614,36 +624,36 @@ export const ShipperDashboard: React.FC = () => {
 
                   {/* Hộp thoại xác nhận hóa đơn thực tế của Shipper */}
                   {confirmOrderId === o.id && (
-                    <div className="bg-slate-900 text-white rounded-2xl p-4 border border-slate-800 flex flex-col gap-4 animate-in slide-in-from-top-1 relative overflow-hidden">
-                      <div className="absolute right-0 top-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="bg-amber-50 text-slate-900 rounded-2xl p-5 border-2 border-amber-400 flex flex-col gap-4 animate-in slide-in-from-top-1 relative overflow-hidden">
+                      <div className="absolute right-0 top-0 w-20 h-20 bg-emerald-550/10 rounded-full blur-2xl pointer-events-none" />
                       
-                      <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <span className="text-xs font-bold text-slate-200">Xác nhận hóa đơn thực tế</span>
+                      <div className="flex justify-between items-center border-b border-amber-350 pb-2">
+                        <span className="text-xs font-black text-slate-800">Xác nhận hóa đơn thực tế</span>
                         <button 
                           onClick={() => setConfirmOrderId(null)}
-                          className="text-[10px] font-bold text-slate-400 hover:text-slate-200"
+                          className="text-[10px] font-bold text-slate-500 hover:text-slate-800"
                         >
                           Hủy
                         </button>
                       </div>
 
-                      <div className="flex flex-col gap-1 text-[11px] text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                      <div className="flex flex-col gap-1 text-[11px] text-slate-700 bg-white p-2.5 rounded-xl border border-amber-300">
                         <div className="flex justify-between">
                           <span>Tiền hàng khách dự kiến:</span>
-                          <span className="font-bold text-slate-100">{itemCost.toLocaleString('vi-VN')} đ</span>
+                          <span className="font-bold text-slate-900">{itemCost.toLocaleString('vi-VN')} đ</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Phí ship (Tip COD):</span>
-                          <span className="font-bold text-slate-100">{o.shipping_fee.toLocaleString('vi-VN')} đ</span>
+                          <span className="font-bold text-slate-900">{o.shipping_fee.toLocaleString('vi-VN')} đ</span>
                         </div>
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                           Số tiền thực tế trên hóa đơn cửa hàng (VNĐ)
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">đ</span>
+                          <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-500">đ</span>
                           <input
                             type="number"
                             required
@@ -651,21 +661,23 @@ export const ShipperDashboard: React.FC = () => {
                             placeholder="Nhập giá tiền hàng thực tế..."
                             value={actualCostInput}
                             onChange={(e) => setActualCostInput(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white font-extrabold focus:outline-none focus:border-emerald-500 transition-colors"
+                            className="w-full bg-white border-2 border-amber-400 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-900 font-extrabold focus:outline-none focus:border-amber-500 transition-colors"
                           />
                         </div>
-                        <p className="text-[9px] text-slate-400 leading-relaxed">
+                        <p className="text-[9px] text-slate-500 leading-relaxed">
                           💡 Nếu có chênh lệch, hệ thống sẽ tự động cập nhật ví điện tử Khách hàng và Shipper tương ứng.
                         </p>
                       </div>
 
-                      {/* Tính toán COD thực tế cần thu */}
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center">
+                      {/* Tính toán COD/CK thực tế cần thu */}
+                      <div className="bg-emerald-100 border border-emerald-300 rounded-xl p-3 flex justify-between items-center text-emerald-950">
                         <div className="flex flex-col">
-                          <span className="text-[9px] text-emerald-400 font-bold uppercase">Tổng COD cần thu tiền mặt</span>
-                          <span className="text-[9px] text-slate-400">Gồm: Hóa đơn thực tế + Phí Ship</span>
+                          <span className="text-[9px] text-emerald-800 font-bold uppercase">
+                            {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? 'Tổng tiền cần chuyển khoản' : 'Tổng COD cần thu tiền mặt'}
+                          </span>
+                          <span className="text-[9px] text-slate-650">Gồm: Hóa đơn thực tế + Phí Ship</span>
                         </div>
-                        <span className="text-sm font-extrabold text-emerald-400">
+                        <span className="text-sm font-extrabold text-emerald-800">
                           {(Number(actualCostInput || 0) + o.shipping_fee).toLocaleString('vi-VN')} đ
                         </span>
                       </div>
@@ -682,10 +694,12 @@ export const ShipperDashboard: React.FC = () => {
                             setConfirmOrderId(null);
                           }
                         }}
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all duration-200 shadow-md"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all duration-200 shadow-md"
                       >
-                        <CheckCircle className="w-4 h-4 text-slate-950" />
-                        Xác nhận đã thu COD & Hoàn thành đơn
+                        <CheckCircle className="w-4 h-4 text-white" />
+                        {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản')
+                          ? 'Xác nhận khách đã chuyển khoản & Hoàn thành đơn'
+                          : 'Xác nhận đã thu COD & Hoàn thành đơn'}
                       </button>
                     </div>
                   )}

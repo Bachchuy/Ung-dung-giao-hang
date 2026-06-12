@@ -50,6 +50,7 @@ export interface Order {
   created_at: string;
   printing_details?: PrintingDetails;
   item_cost?: number;
+  payment_method?: string;
 }
 
 export interface Rating {

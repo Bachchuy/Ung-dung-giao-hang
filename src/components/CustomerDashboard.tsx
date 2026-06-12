@@ -32,12 +32,34 @@ export const CustomerDashboard: React.FC = () => {
   // Overlays state
   const [selectedMapOrder, setSelectedMapOrder] = useState<Order | null>(null);
   const [selectedChatOrder, setSelectedChatOrder] = useState<Order | null>(null);
-  const [isSelectingLocationOnMap, setIsSelectingLocationOnMap] = useState(false);
   
   // Order Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  
+  const [selectedBuilding, setSelectedBuilding] = useState<string>('taquangbuu');
+  const [roomNumber, setRoomNumber] = useState('');
+  const [customLocation, setCustomLocation] = useState('');
   const [location, setLocation] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'tien_mat' | 'chuyen_khoan'>('tien_mat');
+
+  // Auto update location string based on building and room inputs
+  React.useEffect(() => {
+    const LANDMARKS_LABELS: Record<string, string> = {
+      taquangbuu: 'Thư viện Tạ Quang Bửu',
+      parabol: 'Cổng Parabol',
+      d3: 'Nhà D3 (Canteen)',
+      b10: 'KTX B10 (Khu B)',
+      d8: 'Nhà D8 (Trung tâm in)'
+    };
+    if (selectedBuilding === 'other') {
+      setLocation(roomNumber ? `${customLocation} (Phòng ${roomNumber})` : customLocation);
+    } else {
+      const buildingLabel = LANDMARKS_LABELS[selectedBuilding] || '';
+      setLocation(roomNumber ? `${buildingLabel} - Phòng ${roomNumber}` : buildingLabel);
+    }
+  }, [selectedBuilding, roomNumber, customLocation]);
+
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [shippingFee, setShippingFee] = useState(10000);
@@ -113,7 +135,8 @@ export const CustomerDashboard: React.FC = () => {
       return;
     }
 
-    const finalNotes = appliedPromo ? `[Đã áp dụng mã ${appliedPromo.code} giảm ${appliedPromo.discount.toLocaleString('vi-VN')}đ] ${notes}` : notes;
+    const paymentLabel = paymentMethod === 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản';
+    const finalNotes = `[Thanh toán: ${paymentLabel}] ${appliedPromo ? `[Đã áp dụng mã ${appliedPromo.code} giảm ${appliedPromo.discount.toLocaleString('vi-VN')}đ] ` : ''}${notes}`;
 
     const orderData = {
       title,
@@ -123,7 +146,8 @@ export const CustomerDashboard: React.FC = () => {
       phone_number: phone,
       notes: finalNotes,
       shipping_fee: Number(shippingFee),
-      item_cost: currentPricing.estimatedItemCost
+      item_cost: currentPricing.estimatedItemCost,
+      payment_method: paymentMethod
     };
 
     const printingDetails: PrintingDetails | undefined = orderType === 'in_an' ? {
@@ -147,6 +171,7 @@ export const CustomerDashboard: React.FC = () => {
       setCopies(1);
       setPromoCode('');
       setAppliedPromo(null);
+      setPaymentMethod('tien_mat');
       setActiveTab('track');
     }
   };
@@ -243,38 +268,43 @@ export const CustomerDashboard: React.FC = () => {
               return (
                 <div 
                   key={o.id}
-                  className="bg-white/95 backdrop-blur-md border border-rose-100 rounded-[2rem] p-5 shadow-sm hover:border-red-500/30 hover:-translate-y-0.5 transition-all duration-300 flex flex-col gap-4 relative overflow-hidden group"
+                  className="bg-white/95 backdrop-blur-md border border-amber-300 rounded-[2rem] p-5 shadow-sm hover:border-amber-500 hover:-translate-y-0.5 transition-all duration-300 flex flex-col gap-4 relative overflow-hidden group"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
                   <div className="flex justify-between items-start gap-4 relative z-10">
                     <div className="flex gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner ${
-                        o.order_type === 'do_an' ? 'bg-amber-950/40 text-amber-500 border border-amber-900/20' :
-                        o.order_type === 'do_uong' ? 'bg-blue-950/40 text-blue-500 border border-blue-900/20' : 'bg-violet-950/40 text-violet-500 border border-violet-900/20'
+                        o.order_type === 'do_an' ? 'bg-amber-100 text-amber-600 border border-amber-200' :
+                        o.order_type === 'do_uong' ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-violet-100 text-violet-600 border border-violet-200'
                       }`}>
                         {o.order_type === 'do_an' ? <Pizza className="w-5 h-5" /> :
                          o.order_type === 'do_uong' ? <Coffee className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h4 className="font-bold text-zinc-100 text-sm leading-snug">{o.title}</h4>
-                        <p className="text-[10px] text-zinc-400 font-semibold mt-1">{new Date(o.created_at).toLocaleTimeString('vi-VN')} - {o.order_type === 'in_an' ? 'Tài liệu in' : 'Giao nhận'}</p>
+                        <h4 className="font-bold text-slate-800 text-sm leading-snug">{o.title}</h4>
+                        <p className="text-[10px] text-slate-500 font-semibold mt-1">{new Date(o.created_at).toLocaleTimeString('vi-VN')} - {o.order_type === 'in_an' ? 'Tài liệu in' : 'Giao nhận'}</p>
                       </div>
                     </div>
                     {getStatusBadge(o.status)}
                   </div>
 
-                  <div className="bg-zinc-950/80 border border-zinc-900/50 rounded-2xl p-3.5 text-xs text-zinc-300 grid grid-cols-2 gap-2 shadow-inner">
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3.5 text-xs text-slate-700 grid grid-cols-2 gap-2 shadow-inner">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <MapPin className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-                      <span className="truncate"><b>Giao:</b> {o.delivery_location}</span>
+                      <span className="truncate"><b className="text-slate-800">Giao:</b> {o.delivery_location}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <DollarSign className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                      <span><b>Phí ship:</b> {o.shipping_fee.toLocaleString('vi-VN')} VNĐ</span>
+                      <DollarSign className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                      <span><b className="text-slate-800">Phí ship:</b> {o.shipping_fee.toLocaleString('vi-VN')} VNĐ</span>
+                    </div>
+                    <div className="col-span-2 border-t border-amber-200/80 pt-2 flex items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-slate-600">
+                        <b className="text-slate-800">Thanh toán:</b> {o.payment_method === 'chuyen_khoan' || o.notes?.includes('Thanh toán: Chuyển khoản') ? '💳 Chuyển khoản' : '💵 Tiền mặt (COD)'}
+                      </span>
                     </div>
                     {o.notes && (
-                      <div className="col-span-2 text-[11px] text-zinc-400 border-t border-zinc-900/60 pt-2 mt-1">
-                        💡 <b>Ghi chú:</b> {o.notes}
+                      <div className="col-span-2 text-[11px] text-slate-600 border-t border-amber-200/80 pt-2 mt-1">
+                        💡 <b className="text-slate-800">Ghi chú:</b> {o.notes}
                       </div>
                     )}
                   </div>
@@ -297,21 +327,21 @@ export const CustomerDashboard: React.FC = () => {
 
                   {/* Map and Chat Active controls */}
                   {hasShipper && !isFinished && (
-                    <div className="flex gap-2 border-t border-zinc-900/80 pt-3">
+                    <div className="flex gap-2 border-t border-amber-300 pt-3">
                       <button
                         type="button"
                         onClick={() => setSelectedMapOrder(o)}
-                        className="flex-1 bg-red-950/30 hover:bg-red-950/60 text-red-300 text-[11px] font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 border border-red-900/30 active:scale-95"
+                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 text-[11px] font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 border border-red-200 active:scale-95 shadow-sm"
                       >
-                        <MapPin className="w-3.5 h-3.5 text-red-400" />
+                        <MapPin className="w-3.5 h-3.5 text-red-500" />
                         Xem lộ trình (Map)
                       </button>
                       <button
                         type="button"
                         onClick={() => setSelectedChatOrder(o)}
-                        className="flex-1 bg-zinc-900 hover:bg-[#1c1314]/60 text-zinc-100 text-[11px] font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 border border-zinc-800 hover:border-red-900/30 active:scale-95 shadow-sm"
+                        className="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-900 text-[11px] font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 border border-amber-300 active:scale-95 shadow-sm"
                       >
-                        <MessageSquare className="w-3.5 h-3.5 text-zinc-400" />
+                        <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
                         Nhắn tin shipper
                       </button>
                     </div>
@@ -319,16 +349,16 @@ export const CustomerDashboard: React.FC = () => {
 
                   {/* Shipper Details */}
                   {hasShipper ? (
-                    <div className="border-t border-zinc-900/60 pt-3 flex items-center justify-between gap-4">
+                    <div className="border-t border-amber-200 pt-3 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2.5">
                         <img 
                           src={o.shipper_avatar} 
                           alt={o.shipper_name}
-                          className="w-8 h-8 rounded-full border border-zinc-800"
+                          className="w-8 h-8 rounded-full border border-amber-300"
                         />
                         <div>
-                          <p className="text-xs font-bold text-zinc-200 leading-tight">{o.shipper_name}</p>
-                          <p className="text-[10px] text-amber-500 font-semibold mt-0.5 flex items-center gap-1">🚴 Shipper nội khu trường</p>
+                          <p className="text-xs font-bold text-slate-800 leading-tight">{o.shipper_name}</p>
+                          <p className="text-[10px] text-amber-600 font-semibold mt-0.5 flex items-center gap-1">🚴 Shipper nội khu trường</p>
                         </div>
                       </div>
                       
@@ -336,69 +366,69 @@ export const CustomerDashboard: React.FC = () => {
                       {isFinished && !alreadyRated && ratingOrderId !== o.id && (
                         <button
                           onClick={() => setRatingOrderId(o.id)}
-                          className="bg-red-900/20 hover:bg-red-900/40 text-red-300 border border-red-900/30 text-[11px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors duration-200"
+                          className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors duration-200"
                         >
-                          <Star className="w-3 h-3 text-amber-400 fill-amber-400 animate-pulse" />
+                          <Star className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />
                           Đánh giá Shipper
                         </button>
                       )}
 
                       {isFinished && alreadyRated && (
-                        <span className="text-[10px] text-zinc-400 font-semibold flex items-center gap-1 bg-zinc-950/60 py-1 px-2.5 rounded-lg border border-zinc-900/40">
-                          <Check className="w-3 h-3 text-emerald-500" /> Đã đánh giá 5★
+                        <span className="text-[10px] text-emerald-800 font-semibold flex items-center gap-1 bg-emerald-50 py-1 px-2.5 rounded-lg border border-emerald-250">
+                          <Check className="w-3 h-3 text-emerald-600" /> Đã đánh giá 5★
                         </span>
                       )}
                     </div>
                   ) : o.status === 'cho_nhan' ? (
-                    <div className="border-t border-zinc-900/60 pt-3 text-[11px] text-zinc-500 flex items-center justify-between">
-                      <span className="flex items-center gap-1 animate-pulse"><Clock className="w-3.5 h-3.5 text-amber-500" /> Đang tìm shipper xung quanh...</span>
+                    <div className="border-t border-amber-200 pt-3 text-[11px] text-slate-600 flex items-center justify-between">
+                      <span className="flex items-center gap-1 animate-pulse"><Clock className="w-3.5 h-3.5 text-amber-600" /> Đang tìm shipper xung quanh...</span>
                     </div>
                   ) : null}
 
                   {/* Rating Collapse Panel */}
                   {ratingOrderId === o.id && (
-                    <div className="bg-zinc-950/60 border border-zinc-900/80 rounded-2xl p-4 mt-1 flex flex-col gap-3 animate-in slide-in-from-top-1">
-                      <div className="flex items-center justify-between border-b border-zinc-900/60 pb-1.5">
-                        <span className="text-xs font-bold text-zinc-300">Đánh giá 2 chiều (Chỉ có tại BK Ship)</span>
+                    <div className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-4 mt-1 flex flex-col gap-3 animate-in slide-in-from-top-1">
+                      <div className="flex items-center justify-between border-b border-amber-200 pb-1.5">
+                        <span className="text-xs font-bold text-slate-800">Đánh giá 2 chiều (Chỉ có tại BK Ship)</span>
                         <button 
                           onClick={() => setRatingOrderId(null)}
-                          className="text-[10px] font-bold text-zinc-550 hover:text-zinc-300"
+                          className="text-[10px] font-bold text-slate-500 hover:text-slate-850"
                         >
                           Đóng
                         </button>
                       </div>
                       
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-zinc-400 mr-2">Chọn mức độ hài lòng:</span>
+                        <span className="text-xs text-slate-700 mr-2 font-medium">Chọn mức độ hài lòng:</span>
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
                             onClick={() => setRatingScore(star)}
                             className="p-0.5"
                           >
-                            <Star className={`w-5 h-5 ${star <= ratingScore ? 'text-amber-400 fill-amber-400' : 'text-zinc-700'}`} />
+                            <Star className={`w-5 h-5 ${star <= ratingScore ? 'text-amber-500 fill-amber-500' : 'text-slate-300'}`} />
                           </button>
                         ))}
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Viết bình luận cho Shipper</label>
+                        <label className="text-[10px] font-bold text-slate-650 uppercase tracking-wider">Viết bình luận cho Shipper</label>
                         <div className="relative">
-                          <MessageSquare className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-500" />
+                          <MessageSquare className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
                           <input
                             type="text"
                             required
                             placeholder="Giao hàng siêu nhanh, thân thiện dễ thương..."
                             value={ratingComment}
                             onChange={(e) => setRatingComment(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-200 placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors"
+                            className="w-full bg-white border-2 border-amber-400 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors"
                           />
                         </div>
                       </div>
 
                       <button
                         onClick={() => handleRatingSubmit(o.id, o.shipper_id!)}
-                        className="w-full bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md"
+                        className="w-full bg-gradient-to-r from-red-650 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-bold py-2 rounded-xl text-xs transition-all duration-200 shadow-md"
                       >
                         Gửi đánh giá & Cộng điểm uy tín
                       </button>
@@ -413,27 +443,27 @@ export const CustomerDashboard: React.FC = () => {
 
       {/* CREATE TAB */}
       {activeTab === 'create' && (
-        <form onSubmit={handleCreateOrder} className="bg-zinc-900/30 border border-zinc-800/80 backdrop-blur-xl rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col gap-5">
+        <form onSubmit={handleCreateOrder} className="bg-amber-50/95 border-2 border-amber-400 backdrop-blur-xl rounded-[2rem] p-6 shadow-[0_20px_50px_rgba(251,191,36,0.1)] flex flex-col gap-5">
           <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold text-white">Đặt giao hàng mới</h2>
-            <p className="text-xs text-zinc-400">Tự động kết nối shipper tiện đường đi học của bạn.</p>
+            <h2 className="text-lg font-black text-amber-950">Đặt giao hàng mới</h2>
+            <p className="text-xs text-slate-700 font-medium">Tự động kết nối shipper tiện đường đi học của bạn.</p>
           </div>
 
           {/* Select Category */}
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">1. Chọn loại đơn hàng</label>
+            <label className="text-xs font-black text-amber-900 uppercase tracking-wider">1. Chọn loại đơn hàng</label>
             <div className="grid grid-cols-3 gap-3">
               <button
                 type="button"
                 onClick={() => setOrderType('do_an')}
                 className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${
                   orderType === 'do_an' 
-                    ? 'border-red-900/50 bg-gradient-to-br from-red-950/40 to-[#2c1d1f] text-red-400 font-extrabold shadow-[0_8px_25px_rgba(185,28,28,0.25)] scale-[1.02]' 
-                    : 'border-zinc-800 bg-zinc-900/40 text-zinc-500 hover:border-red-900/30 hover:bg-red-950/20 hover:shadow-sm'
+                    ? 'border-red-600 bg-red-50 text-red-800 font-extrabold shadow-[0_8px_25px_rgba(220,38,38,0.15)] scale-[1.02]' 
+                    : 'border-amber-300 bg-white text-slate-700 hover:border-amber-450 hover:bg-amber-50/50 hover:shadow-sm'
                 }`}
               >
-                <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'do_an' ? 'bg-red-950/60 shadow-inner' : 'bg-zinc-950 group-hover:bg-red-950/30'}`}>
-                  <Pizza className={`w-6 h-6 transition-transform duration-300 ${orderType === 'do_an' ? 'text-red-500 scale-110' : 'text-zinc-500 group-hover:text-red-400'}`} />
+                <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'do_an' ? 'bg-red-100 shadow-inner' : 'bg-slate-100 group-hover:bg-red-100/50'}`}>
+                  <Pizza className={`w-6 h-6 transition-transform duration-300 ${orderType === 'do_an' ? 'text-red-650 scale-110' : 'text-slate-500 group-hover:text-red-500'}`} />
                 </div>
                 <span className="text-[11px] tracking-wide font-bold">Đồ ăn</span>
               </button>
@@ -443,12 +473,12 @@ export const CustomerDashboard: React.FC = () => {
                 onClick={() => setOrderType('do_uong')}
                 className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${
                   orderType === 'do_uong' 
-                    ? 'border-amber-900/50 bg-gradient-to-br from-amber-950/40 to-[#2d2518] text-amber-400 font-extrabold shadow-[0_8px_25px_rgba(245,158,11,0.25)] scale-[1.02]' 
-                    : 'border-zinc-800 bg-zinc-900/40 text-zinc-500 hover:border-amber-900/30 hover:bg-amber-950/20 hover:shadow-sm'
+                    ? 'border-amber-500 bg-amber-100 text-amber-950 font-extrabold shadow-[0_8px_25px_rgba(245,158,11,0.15)] scale-[1.02]' 
+                    : 'border-amber-300 bg-white text-slate-700 hover:border-amber-450 hover:bg-amber-50/50 hover:shadow-sm'
                 }`}
               >
-                <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'do_uong' ? 'bg-amber-950/60 shadow-inner' : 'bg-zinc-950 group-hover:bg-amber-950/30'}`}>
-                  <Coffee className={`w-6 h-6 transition-transform duration-300 ${orderType === 'do_uong' ? 'text-amber-500 scale-110' : 'text-zinc-500 group-hover:text-amber-400'}`} />
+                <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'do_uong' ? 'bg-amber-200 shadow-inner' : 'bg-slate-100 group-hover:bg-amber-100/55'}`}>
+                  <Coffee className={`w-6 h-6 transition-transform duration-300 ${orderType === 'do_uong' ? 'text-amber-650 scale-110' : 'text-slate-500 group-hover:text-amber-600'}`} />
                 </div>
                 <span className="text-[11px] tracking-wide font-bold">Thức uống</span>
               </button>
@@ -458,12 +488,12 @@ export const CustomerDashboard: React.FC = () => {
                 onClick={() => setOrderType('in_an')}
                 className={`relative overflow-hidden py-4 px-2 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-2 group ${
                   orderType === 'in_an' 
-                    ? 'border-indigo-900/50 bg-gradient-to-br from-indigo-950/40 to-[#1d1e2c] text-indigo-400 font-extrabold shadow-[0_8px_25px_rgba(99,102,241,0.25)] scale-[1.02]' 
-                    : 'border-zinc-800 bg-zinc-900/40 text-zinc-500 hover:border-indigo-900/30 hover:bg-indigo-950/20 hover:shadow-sm'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-900 font-extrabold shadow-[0_8px_25px_rgba(99,102,241,0.15)] scale-[1.02]' 
+                    : 'border-amber-300 bg-white text-slate-700 hover:border-indigo-400 hover:bg-indigo-50/20 hover:shadow-sm'
                 }`}
               >
-                <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'in_an' ? 'bg-indigo-950/60 shadow-inner' : 'bg-zinc-950 group-hover:bg-indigo-950/30'}`}>
-                  <FileText className={`w-6 h-6 transition-transform duration-300 ${orderType === 'in_an' ? 'text-indigo-500 scale-110' : 'text-zinc-500 group-hover:text-indigo-400'}`} />
+                <div className={`p-2.5 rounded-full transition-colors duration-300 ${orderType === 'in_an' ? 'bg-indigo-100 shadow-inner' : 'bg-slate-100 group-hover:bg-indigo-100/55'}`}>
+                  <FileText className={`w-6 h-6 transition-transform duration-300 ${orderType === 'in_an' ? 'text-indigo-600 scale-110' : 'text-slate-500 group-hover:text-indigo-500'}`} />
                 </div>
                 <span className="text-[11px] tracking-wide font-bold">In ấn PDF</span>
               </button>
@@ -472,42 +502,42 @@ export const CustomerDashboard: React.FC = () => {
 
           {/* Form fields */}
           <div className="flex flex-col gap-4">
-            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">2. Thông tin chi tiết đơn</label>
+            <label className="text-xs font-black text-amber-900 uppercase tracking-wider">2. Thông tin chi tiết đơn</label>
             
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-zinc-350">Tên món hoặc Tên tài liệu cần in *</label>
+              <label className="text-[11px] font-bold text-slate-800">Tên món hoặc Tên tài liệu cần in *</label>
               <input
                 type="text"
                 required
                 placeholder={orderType === 'do_an' ? 'Bánh mì thịt nướng cổng Parabol' : orderType === 'do_uong' ? 'Trà sữa KOI Thé Size M' : 'In tài liệu Ôn thi Pháp luật đại cương'}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors"
+                className="bg-white border-2 border-amber-400 rounded-xl px-4 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 font-semibold transition-colors"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-zinc-350">Mô tả chi tiết mua hộ / Ghi chú cho shipper</label>
+              <label className="text-[11px] font-bold text-slate-800">Mô tả chi tiết mua hộ / Ghi chú cho shipper</label>
               <textarea
                 placeholder={orderType === 'do_an' ? 'Quán bán ở vỉa hè cạnh nhà sách, mua nhiều rau giúp em nhé...' : 'In file PDF đã tải lên ở dưới'}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors h-16 resize-none"
+                className="bg-white border-2 border-amber-400 rounded-xl px-4 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 font-semibold transition-colors h-16 resize-none"
               />
             </div>
 
             {/* Printing Options panel */}
             {orderType === 'in_an' && (
-              <div className="border border-indigo-950/60 bg-indigo-950/10 rounded-2xl p-4 flex flex-col gap-4">
+              <div className="border-2 border-indigo-400 bg-indigo-50/50 rounded-2xl p-4 flex flex-col gap-4">
                 <div className="flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-indigo-400" />
-                  <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Tùy chọn file in PDF</span>
+                  <FileText className="w-4 h-4 text-indigo-700" />
+                  <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Tùy chọn file in PDF</span>
                 </div>
 
                 {/* PDF Simulation Upload */}
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Upload tài liệu học tập (*.pdf)</span>
-                  <div className="border border-dashed border-indigo-900/40 bg-zinc-950/80 rounded-2xl p-6 text-center cursor-pointer hover:border-indigo-600 hover:bg-[#1d1e2c]/20 hover:shadow-inner transition-all duration-300 relative group overflow-hidden">
+                  <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Upload tài liệu học tập (*.pdf)</span>
+                  <div className="border-2 border-dashed border-indigo-400 bg-white rounded-2xl p-6 text-center cursor-pointer hover:border-indigo-600 hover:bg-indigo-50/50 hover:shadow-inner transition-all duration-300 relative group overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <input
                       type="file"
@@ -517,26 +547,26 @@ export const CustomerDashboard: React.FC = () => {
                     />
                     {isUploading ? (
                       <div className="flex flex-col items-center gap-2 relative z-0">
-                        <div className="h-1.5 w-32 bg-indigo-950 rounded-full overflow-hidden shadow-inner">
+                        <div className="h-1.5 w-32 bg-indigo-200 rounded-full overflow-hidden shadow-inner">
                           <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-[loading_1.5s_ease-in-out_infinite]" style={{ width: '60%' }}></div>
                         </div>
-                        <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Đang phân tích file...</span>
+                        <span className="text-[10px] text-indigo-750 font-bold uppercase tracking-wider">Đang phân tích file...</span>
                       </div>
                     ) : pdfFileName ? (
                       <div className="flex flex-col items-center gap-2 relative z-0">
-                        <div className="bg-emerald-950/80 p-3 rounded-full shadow-sm mb-1 border border-emerald-900/30">
-                          <FileUp className="w-8 h-8 text-emerald-400 animate-bounce" />
+                        <div className="bg-emerald-100 p-3 rounded-full shadow-sm mb-1 border border-emerald-300">
+                          <FileUp className="w-8 h-8 text-emerald-600 animate-bounce" />
                         </div>
-                        <span className="text-sm font-extrabold text-zinc-200 max-w-[220px] truncate">{pdfFileName}</span>
-                        <span className="text-[10px] text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-md font-bold uppercase tracking-wide border border-emerald-900/30">Tải lên thành công</span>
+                        <span className="text-sm font-extrabold text-slate-800 max-w-[220px] truncate">{pdfFileName}</span>
+                        <span className="text-[10px] text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-md font-bold uppercase tracking-wide border border-emerald-300">Tải lên thành công</span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2 relative z-0">
-                        <div className="bg-indigo-950/80 p-3 rounded-full group-hover:scale-110 group-hover:shadow-md transition-all duration-300 mb-1 border border-indigo-900/20">
-                          <FileUp className="w-8 h-8 text-indigo-400" />
+                        <div className="bg-indigo-100 p-3 rounded-full group-hover:scale-110 group-hover:shadow-md transition-all duration-300 mb-1 border border-indigo-200">
+                          <FileUp className="w-8 h-8 text-indigo-650" />
                         </div>
-                        <span className="text-xs font-bold text-indigo-300">Kéo thả hoặc click để chọn file PDF</span>
-                        <span className="text-[10px] text-zinc-500 font-medium">Hỗ trợ file tối đa 20MB</span>
+                        <span className="text-xs font-bold text-indigo-900">Kéo thả hoặc click để chọn file PDF</span>
+                        <span className="text-[10px] text-slate-500 font-medium">Hỗ trợ file tối đa 20MB</span>
                       </div>
                     )}
                   </div>
@@ -544,49 +574,49 @@ export const CustomerDashboard: React.FC = () => {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Số bản in</span>
+                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Số bản in</span>
                     <input
                       type="number"
                       min={1}
                       max={100}
                       value={copies}
                       onChange={(e) => setCopies(Math.max(1, Number(e.target.value)))}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-600 transition-colors"
+                      className="bg-white border-2 border-amber-400 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 transition-colors"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Chế độ in</span>
-                    <div className="flex bg-zinc-950 border border-zinc-800 rounded-xl p-0.5">
+                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Chế độ in</span>
+                    <div className="flex bg-white border-2 border-amber-400 rounded-xl p-0.5">
                       <button
                         type="button"
                         onClick={() => setIsColor(false)}
-                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${!isColor ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${!isColor ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                       >
                         B&W
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsColor(true)}
-                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${isColor ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${isColor ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                       >
                         Màu
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Số mặt in</span>
-                    <div className="flex bg-zinc-950 border border-zinc-800 rounded-xl p-0.5">
+                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Số mặt in</span>
+                    <div className="flex bg-white border-2 border-amber-400 rounded-xl p-0.5">
                       <button
                         type="button"
                         onClick={() => setIsDoubleSided(true)}
-                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${isDoubleSided ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${isDoubleSided ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                       >
                         2 Mặt
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsDoubleSided(false)}
-                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${!isDoubleSided ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}
+                        className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg ${!isDoubleSided ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                       >
                         1 Mặt
                       </button>
@@ -595,66 +625,114 @@ export const CustomerDashboard: React.FC = () => {
                 </div>
 
                 {/* Tính toán chi phí in ấn mô phỏng */}
-                <div className="bg-zinc-950 rounded-xl p-3 border border-indigo-950/60 flex items-center justify-between shadow-inner">
+                <div className="bg-white rounded-xl p-3 border-2 border-indigo-400 flex items-center justify-between shadow-inner">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase">Tạm tính phí in</span>
-                    <span className="text-[9px] text-zinc-550">Mock: 10 trang x {isColor ? '2.000đ' : '500đ'}/trang</span>
+                    <span className="text-[10px] font-bold text-slate-700 uppercase">Tạm tính phí in</span>
+                    <span className="text-[9px] text-slate-500">Mock: 10 trang x {isColor ? '2.000đ' : '500đ'}/trang</span>
                   </div>
-                  <span className="text-sm font-extrabold text-indigo-400">
+                  <span className="text-sm font-black text-indigo-700">
                     {(copies * 10 * (isColor ? 2000 : 500)).toLocaleString('vi-VN')} đ
                   </span>
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <div className="flex justify-between items-center px-0.5">
-                  <label className="text-[11px] font-bold text-zinc-350">Vị trí giao hàng *</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-bold text-slate-800">Chọn Tòa nhà / Địa điểm giao hàng *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'taquangbuu', label: 'Tạ Quang Bửu 📚' },
+                  { id: 'parabol', label: 'Cổng Parabol 📍' },
+                  { id: 'd3', label: 'Nhà D3 (Canteen) 🏢' },
+                  { id: 'b10', label: 'KTX B10 🏠' },
+                  { id: 'd8', label: 'Nhà D8 (In ấn) 🖨️' },
+                  { id: 'other', label: 'Địa điểm khác ✏️' }
+                ].map((building) => (
                   <button
+                    key={building.id}
                     type="button"
-                    onClick={() => setIsSelectingLocationOnMap(true)}
-                    className="text-[10px] text-red-400 hover:text-red-300 font-extrabold flex items-center gap-0.5 hover:underline"
+                    onClick={() => setSelectedBuilding(building.id)}
+                    className={`py-2 px-3 rounded-xl border text-center text-xs font-bold transition-all duration-200 ${
+                      selectedBuilding === building.id
+                        ? 'border-amber-500 bg-amber-100 text-amber-950 font-black shadow-sm'
+                        : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
+                    }`}
                   >
-                    📍 Chọn từ Bản đồ
+                    {building.label}
                   </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {selectedBuilding === 'other' ? (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-slate-800">Nhập địa điểm khác *</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="VD: Nhà B1, Sảnh D9..."
+                      value={customLocation}
+                      onChange={(e) => setCustomLocation(e.target.value)}
+                      className="w-full bg-white border-2 border-amber-400 rounded-xl pl-9 pr-3 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 font-semibold transition-colors"
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <MapPin className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-zinc-500" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: Phòng tự học Tạ Quang Bửu"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors"
-                  />
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-slate-800">Địa điểm đã chọn</label>
+                  <div className="relative bg-white border-2 border-amber-400 rounded-xl px-4 py-3 text-xs text-slate-800 font-semibold select-none">
+                    {selectedBuilding === 'taquangbuu' && 'Thư viện Tạ Quang Bửu 📚'}
+                    {selectedBuilding === 'parabol' && 'Cổng Parabol 📍'}
+                    {selectedBuilding === 'd3' && 'Nhà D3 (Canteen) 🏢'}
+                    {selectedBuilding === 'b10' && 'KTX B10 (Khu B) 🏠'}
+                    {selectedBuilding === 'd8' && 'Nhà D8 (Trung tâm in) 🖨️'}
+                  </div>
                 </div>
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-slate-800">Số phòng / Tầng / Chi tiết</label>
+                <input
+                  type="text"
+                  placeholder="VD: Phòng 402, tầng 3..."
+                  value={roomNumber}
+                  onChange={(e) => setRoomNumber(e.target.value)}
+                  className="w-full bg-white border-2 border-amber-400 rounded-xl px-4 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 font-semibold transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="hidden">
+                <input type="text" value={location} readOnly />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-zinc-350">Số điện thoại liên hệ *</label>
+                <label className="text-[11px] font-bold text-slate-800">Số điện thoại liên hệ *</label>
                 <div className="relative">
-                  <Phone className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-zinc-500" />
+                  <Phone className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-slate-400" />
                   <input
                     type="tel"
                     required
                     placeholder="VD: 0987654321"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors"
+                    className="w-full bg-white border-2 border-amber-400 rounded-xl pl-9 pr-3 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 font-semibold transition-colors"
                   />
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-zinc-350 flex justify-between">
+              <label className="text-[11px] font-bold text-slate-800 flex justify-between">
                 <span>Phí Ship trả sinh viên (Tip) *</span>
-                <span className="text-zinc-500">Tối thiểu: 5.000 VNĐ</span>
+                <span className="text-slate-500 font-semibold">Tối thiểu: 5.000 VNĐ</span>
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-zinc-500" />
+                <DollarSign className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-slate-400" />
                 <input
                   type="number"
                   required
@@ -663,24 +741,24 @@ export const CustomerDashboard: React.FC = () => {
                   placeholder="VD: 15000"
                   value={shippingFee}
                   onChange={(e) => setShippingFee(Number(e.target.value))}
-                  className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl pl-9 pr-3 py-3 text-xs text-white font-bold placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors"
+                  className="w-full bg-white border-2 border-amber-400 rounded-xl pl-9 pr-3 py-3 text-xs text-slate-900 font-extrabold placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors"
                 />
               </div>
             </div>
 
             {/* Giá tiền hàng dự kiến (Chỉ hiện khi là food hoặc drink) */}
             {(orderType === 'do_an' || orderType === 'do_uong') && (
-              <div className="border border-amber-950/60 bg-amber-950/10 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
+              <div className="border-2 border-amber-400 bg-amber-100/50 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                    <DollarSign className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                  <label className="text-[11px] font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1">
+                    <DollarSign className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
                     Giá tiền hàng dự kiến *
                   </label>
-                  <span className="text-[10px] text-zinc-500">Shipper ứng trước mua hộ</span>
+                  <span className="text-[10px] text-slate-700 font-bold">Shipper ứng trước mua hộ</span>
                 </div>
                 
                 <div className="relative">
-                  <span className="absolute left-3 top-3 text-xs font-bold text-zinc-550">đ</span>
+                  <span className="absolute left-3 top-3 text-xs font-bold text-slate-500">đ</span>
                   <input
                     type="number"
                     required
@@ -689,7 +767,7 @@ export const CustomerDashboard: React.FC = () => {
                     placeholder="VD: 30000"
                     value={itemCost}
                     onChange={(e) => setItemCost(Math.max(0, Number(e.target.value)))}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-8 pr-3 py-3 text-xs text-white font-extrabold focus:outline-none focus:border-amber-600 transition-colors"
+                    className="w-full bg-white border-2 border-amber-400 rounded-xl pl-8 pr-3 py-3 text-xs text-slate-900 font-black focus:outline-none focus:border-amber-500 transition-colors"
                   />
                 </div>
 
@@ -700,10 +778,10 @@ export const CustomerDashboard: React.FC = () => {
                       key={preset}
                       type="button"
                       onClick={() => setItemCost(preset)}
-                      className={`flex-1 py-2 px-1 text-[10px] font-bold rounded-lg border transition-all duration-200 ${
+                      className={`flex-1 py-2 px-1 text-[10px] font-bold rounded-lg border-2 transition-all duration-200 ${
                         itemCost === preset
-                          ? 'bg-gradient-to-r from-red-600 to-amber-500 border-transparent text-white shadow-sm'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
+                          ? 'bg-amber-500 border-transparent text-white shadow-sm'
+                          : 'bg-white border-amber-450 text-slate-700 hover:border-amber-500'
                       }`}
                     >
                       {preset.toLocaleString('vi-VN')} đ
@@ -715,16 +793,16 @@ export const CustomerDashboard: React.FC = () => {
 
             {/* Mã Giảm Giá */}
             <div className="flex flex-col gap-1.5 mt-1">
-              <label className="text-[11px] font-bold text-zinc-350">Mã giảm giá / Khuyến mãi</label>
+              <label className="text-[11px] font-bold text-slate-800">Mã giảm giá / Khuyến mãi</label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Ticket className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-zinc-500" />
+                  <Ticket className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-slate-400" />
                   <input
                     type="text"
                     placeholder="VD: FREESHIP, TANBINH..."
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl pl-9 pr-3 py-3 text-xs text-white font-bold placeholder-zinc-650 focus:outline-none focus:border-red-600 transition-colors uppercase"
+                    className="w-full bg-white border-2 border-amber-400 rounded-xl pl-9 pr-3 py-3 text-xs text-slate-900 font-bold placeholder-slate-450 focus:outline-none focus:border-amber-500 transition-colors uppercase"
                   />
                 </div>
                 <button
@@ -736,63 +814,105 @@ export const CustomerDashboard: React.FC = () => {
                 </button>
               </div>
               {appliedPromo && (
-                <p className="text-[10px] font-bold text-emerald-600 flex items-center gap-1 mt-1 px-0.5">
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <p className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-xl flex items-center gap-1 mt-1">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
                   Đã áp dụng mã {appliedPromo.code}: Giảm {appliedPromo.discount.toLocaleString('vi-VN')}đ
                 </p>
               )}
             </div>
+
+            {/* Chọn Hình Thức Thanh Toán */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-amber-900 uppercase tracking-wider">3. Chọn hình thức thanh toán</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('tien_mat')}
+                  className={`py-3 px-4 rounded-xl border-2 text-center text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+                    paymentMethod === 'tien_mat'
+                      ? 'border-emerald-500 bg-emerald-100 text-emerald-950 font-black shadow-[0_4px_15px_rgba(16,185,129,0.15)]'
+                      : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
+                  }`}
+                >
+                  💵 Tiền mặt (COD)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('chuyen_khoan')}
+                  className={`py-3 px-4 rounded-xl border-2 text-center text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+                    paymentMethod === 'chuyen_khoan'
+                      ? 'border-blue-500 bg-blue-100 text-blue-950 font-black shadow-[0_4px_15px_rgba(59,130,246,0.15)]'
+                      : 'border-amber-300 bg-white text-slate-700 hover:border-amber-500'
+                  }`}
+                >
+                  💳 Chuyển khoản
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Tóm tắt thanh toán COD */}
-          <div className="bg-[#1c1314] text-white rounded-[2rem] p-4 flex flex-col gap-3.5 border border-red-950/60 shadow-lg relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
+          {/* Tóm tắt thanh toán */}
+          <div className="bg-white text-slate-900 rounded-[2rem] p-5 flex flex-col gap-3.5 border-2 border-amber-400 shadow-md relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
             
-            <div className="flex justify-between items-center border-b border-red-950/40 pb-2">
-              <span className="text-[10px] font-bold tracking-wider text-zinc-400 uppercase">Hình thức thanh toán</span>
-              <span className="text-[10px] bg-red-950/40 text-red-400 border border-red-900/30 font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-inner">
-                🤝 Tiền mặt (COD) Nội khu
-              </span>
+            <div className="flex justify-between items-center border-b border-amber-200 pb-2">
+              <span className="text-[10px] font-bold tracking-wider text-slate-600 uppercase">Hình thức thanh toán</span>
+              {paymentMethod === 'tien_mat' ? (
+                <span className="text-[10px] bg-emerald-100 text-emerald-855 border border-emerald-300 font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-inner">
+                  🤝 Tiền mặt (COD) Nội khu
+                </span>
+              ) : (
+                <span className="text-[10px] bg-blue-100 text-blue-855 border border-blue-300 font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-inner">
+                  💳 Chuyển khoản Ngân hàng
+                </span>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5 text-xs">
-              <div className="flex justify-between text-zinc-300">
+              <div className="flex justify-between text-slate-700">
                 <span>Tiền hàng cần chuẩn bị:</span>
-                <span className="font-semibold text-zinc-100">
+                <span className="font-bold text-slate-900">
                   {currentPricing.estimatedItemCost.toLocaleString('vi-VN')} đ
                 </span>
               </div>
-              <div className="flex justify-between text-zinc-300">
-                <span>Phí ship trả Shipper (Tip COD):</span>
-                <span className="font-semibold text-zinc-100">
+              <div className="flex justify-between text-slate-700">
+                <span>Phí ship trả Shipper (Tip):</span>
+                <span className="font-bold text-slate-900">
                   {Number(shippingFee).toLocaleString('vi-VN')} đ
                 </span>
               </div>
               {appliedPromo && (
-                <div className="flex justify-between text-emerald-400 font-bold">
+                <div className="flex justify-between text-emerald-800 font-black">
                   <span>Khuyến mãi ({appliedPromo.code}):</span>
                   <span>- {appliedPromo.discount.toLocaleString('vi-VN')} đ</span>
                 </div>
               )}
-              <div className="flex justify-between items-end border-t border-zinc-800/80 pt-2.5 mt-0.5">
-                <span className="text-[11px] font-bold text-zinc-400">Tổng cộng tiền mặt cần trả:</span>
+              <div className="flex justify-between items-end border-t border-amber-200 pt-2.5 mt-0.5">
+                <span className="text-[11px] font-bold text-slate-700">
+                  {paymentMethod === 'tien_mat' ? 'Tổng cộng tiền mặt cần trả:' : 'Tổng số tiền cần chuyển khoản:'}
+                </span>
                 <div className="flex flex-col items-end">
                   {appliedPromo && (
-                    <span className="text-[10px] text-zinc-550 line-through mb-0.5">
+                    <span className="text-[10px] text-slate-500 line-through mb-0.5">
                       {((orderType === 'in_an'
-                        ? (copies * 10 * (isColor ? 2000 : 500))
-                        : Number(itemCost)) + Number(shippingFee)).toLocaleString('vi-VN')} đ
+                         ? (copies * 10 * (isColor ? 2000 : 500))
+                         : Number(itemCost)) + Number(shippingFee)).toLocaleString('vi-VN')} đ
                     </span>
                   )}
-                  <span className="text-base font-extrabold text-amber-400">
+                  <span className="text-base font-black text-red-650">
                       {Math.max(0, currentPricing.totalAmount - (appliedPromo?.discount || 0)).toLocaleString('vi-VN')} đ
                   </span>
                 </div>
               </div>
             </div>
             
-            <div className="text-[9px] text-zinc-400 leading-normal flex items-start gap-1 bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-900/60">
-              💡 <span>Bạn <b>không bị trừ số dư trước</b>. Hãy chuẩn bị sẵn tiền mặt và trả cho Shipper khi giao hàng thành công. Shipper sẽ tự ứng trước tiền tại quán.</span>
+            <div className="text-[9px] text-slate-700 leading-normal flex items-start gap-1 bg-amber-50/50 p-3 rounded-xl border border-amber-300">
+              💡 <span>
+                {paymentMethod === 'tien_mat' 
+                  ? 'Bạn không bị trừ số dư trước. Hãy chuẩn bị sẵn tiền mặt và trả cho Shipper khi giao hàng thành công. Shipper sẽ tự ứng trước tiền tại quán.'
+                  : 'Bạn vui lòng chuyển khoản cho Shipper sau khi nhận được hàng thành công. Shipper sẽ tự ứng trước tiền mua hàng.'
+                }
+              </span>
             </div>
           </div>
 
@@ -806,15 +926,6 @@ export const CustomerDashboard: React.FC = () => {
       )}
 
       {/* Overlays */}
-      {isSelectingLocationOnMap && (
-        <CampusMap 
-          onSelectLocation={(selectedLabel) => {
-            setLocation(selectedLabel);
-            setIsSelectingLocationOnMap(false);
-          }}
-          onClose={() => setIsSelectingLocationOnMap(false)}
-        />
-      )}
       {selectedMapOrder && (
         <CampusMap 
           order={selectedMapOrder} 

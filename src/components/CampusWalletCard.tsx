@@ -55,31 +55,31 @@ export const CampusWalletCard: React.FC = () => {
         </div>
       </div>
 
-      {/* Deposit Modal Overlay - Premium Dark Mode Glassmorphism */}
+      {/* Deposit Modal Overlay - High Contrast Amber/Yellow Theme */}
       {isDepositOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-zinc-950 rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.8)] transform scale-in-center animate-in zoom-in-95 duration-200 border border-zinc-800/80">
-            <div className="bg-gradient-to-r from-[#1c1314] to-[#251819] p-5 flex justify-between items-center text-white border-b border-zinc-900 shadow-inner">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl transform scale-in-center animate-in zoom-in-95 duration-200 border-2 border-amber-400">
+            <div className="bg-gradient-to-r from-red-600 to-amber-500 p-5 flex justify-between items-center text-white shadow-inner">
               <div className="flex items-center gap-2.5">
-                <div className="bg-red-950/40 p-2.5 rounded-xl border border-red-900/30">
-                  <Wallet className="w-5 h-5 text-amber-400" />
+                <div className="bg-red-700 p-2.5 rounded-xl border border-red-500">
+                  <Wallet className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm tracking-wide">Nạp Tiền Ví BK</h3>
-                  <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">Trình mô phỏng</p>
+                  <p className="text-[10px] text-red-200 font-bold uppercase tracking-wider">Trình mô phỏng</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsDepositOpen(false)} 
-                className="bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors duration-200 backdrop-blur-sm border border-white/5"
+                className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors duration-200 backdrop-blur-sm border border-white/10"
               >
-                <X className="w-4 h-4 text-zinc-400 hover:text-white" />
+                <X className="w-4 h-4 text-white" />
               </button>
             </div>
             
-            <div className="p-6 flex flex-col gap-5 bg-[#0e0a0b]">
-              <p className="text-[11px] text-zinc-400 text-center font-medium leading-relaxed px-2">
-                Chọn mệnh giá để nạp tiền ảo. Tiền sẽ được cộng tức thì vào <b className="text-amber-400 font-extrabold">BK Wallet</b> của bạn để thử nghiệm tính năng giao dịch.
+            <div className="p-6 flex flex-col gap-5 bg-amber-50/50">
+              <p className="text-[11px] text-slate-700 text-center font-semibold leading-relaxed px-2">
+                Chọn mệnh giá để nạp tiền ảo. Tiền sẽ được cộng tức thì vào <b className="text-amber-600 font-black">BK Wallet</b> của bạn để thử nghiệm tính năng giao dịch.
               </p>
               
               <div className="grid grid-cols-2 gap-3.5">
@@ -87,9 +87,9 @@ export const CampusWalletCard: React.FC = () => {
                   <button
                     key={amount}
                     onClick={() => handleDeposit(amount)}
-                    className="group relative overflow-hidden bg-zinc-900/50 border border-zinc-800 hover:border-red-900/60 text-zinc-200 hover:text-white font-extrabold py-3.5 rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-sm hover:shadow-md"
+                    className="group relative overflow-hidden bg-white border-2 border-amber-400 hover:border-amber-500 text-slate-800 hover:text-slate-900 font-black py-3.5 rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-sm hover:shadow-md"
                   >
-                    <div className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-amber-500 opacity-5 group-hover:opacity-10 transition-opacity duration-300" />
                     +{amount.toLocaleString('vi-VN')} đ
                   </button>
                 ))}
@@ -98,7 +98,7 @@ export const CampusWalletCard: React.FC = () => {
               <div className="mt-1 flex justify-center">
                 <button
                   onClick={() => setIsDepositOpen(false)}
-                  className="py-2 px-6 rounded-xl text-xs font-bold text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-all"
+                  className="py-2 px-6 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 transition-all"
                 >
                   Đóng
                 </button>
